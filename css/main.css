@@ -1,0 +1,216 @@
+/********** v.7 **********/
+/* this css file contains styles shared by all garden pages */
+/* units
+   1in = 72pt
+   1in = 96px
+	 1em is equal to the current font size
+   1em = 16px, based on the default font size of 16px
+*/
+/*
+  - changed viewBar to barView
+*/
+
+*{
+  box-sizing: border-box;
+}
+
+/* Current navbar link, i.e. selected page */
+#active {
+  background-color: #e6faff;
+  border-radius: 7px;
+}
+
+/* The overall body of this page has a background that changes from darker blue at the top to lighter blue at the bottom. 
+Font family is set for the entire page, unless specified otherwise. The margin and padding set the start of content starts, at 0.*/
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-image: linear-gradient(#99ccff, #e6faff);
+/*   background-image: url("../pictures/CurrPic.jpg"); */
+  color: navy;
+  /* Safari 5.1, iOS 5.0-6.1, Chrome 10-25, Android 4.0-4.3 */
+  background-image:-webkit-linear-gradient(#99ccff, #e6faff);
+/*   background-image: url("../pictures/CurrPic.jpg"); */
+  font-family: FontAwesome, 'Big Caslon', 'Book Antiqua', 'Palatino Linotype', 'Georgia', 'serif';
+}
+
+/* settings for the view bar: a vertical menu bar that contains view choices (db) or settings (vis) */
+.barView {
+  display: none;
+  position: absolute;
+  top: 0.25em; 
+  left: 0.5em;
+  border-radius: 7px;
+  text-align: left;
+  padding: 3px 0 0 30px;
+  z-index: 5;
+}
+.barView button {
+  display: block;
+  min-width: 7em;
+  border: 0;
+  color: rgba(204, 255, 153, 0.90);
+  font-weight: bold;
+  min-height: 3em;
+}
+.barView button:hover {
+  color: yellow;
+  background-color: rgb(0, 0, 0);
+}
+/* settings button, top left, displayed on Db and Vis pages */
+#btnView {
+  display: block; /* mobile first, see @media for desktop */
+  position: relative;
+  float: left;
+  z-index: 6; /* above navbar and page title */
+  left: 2px;
+  top: 2px;
+  margin: 0;
+  max-height: 2.5em;
+/* padding: 5px; */
+/*   border-radius: 50%; */
+}
+
+#btnView img {
+  -webkit-transition: -webkit-transform .8s ease-in-out;
+  transition:         transform .8s ease-in-out;
+}
+#btnView img:hover {
+  -webkit-transform: rotate(360deg);        
+  transform: rotate(360deg);
+}
+#btnView img:click {
+  -webkit-transform: rotate(360deg);        
+  transform: rotate(360deg);
+}
+/* general settings for all buttons */
+button {
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 0.25em;
+  border-radius: 7px;
+  background-color: rgb(0, 0, 77); 
+  color: white;
+  cursor: pointer;
+  max-width: 7em;
+}
+
+/* Settings for the styling of a drop down column choices on hover */
+.customChoice:hover {
+  color: #999999;
+  cursor: pointer;
+}
+
+/* The animation code, applied to the navigation bar on all pages */
+@keyframes coloranima {
+    0%  {background-color: #004d00;}
+   25%  {background-color: #99cc00;}
+   30%  {background-color: orange;}
+   35%  {background-color: #990000;}
+   41%  {background-color: #804000;}  
+   50%  {background-color: #e0e0d1;}  
+   60%  {background-color: #b3e6ff;}  
+   75%  {background-color: #004d00;}  
+  100%  {background-color: #004d00;}  
+}  
+@-webkit-keyframes coloranima {
+    0%  {background-color: #004d00;}
+   25%  {background-color: #99cc00;}
+   30%  {background-color: orange;}
+   35%  {background-color: #990000;}
+   41%  {background-color: #804000;}  
+   50%  {background-color: #e0e0d1;}  
+   60%  {background-color: #b3e6ff;}  
+   75%  {background-color: #004d00;}  
+  100%  {background-color: #004d00;}  
+}
+
+/* For desktop and tablet with width greater than 768px
+   (600 for small devices; 400 for phones; 
+    768 - medium, 992 - large, 1200 - extra large)
+*/
+@media only screen and (min-width: 600px) {
+/*   #btnView {
+    display: inline;
+  }
+  .navbar a {
+    display: inline;
+    color: purple;
+  } */
+  .navbar h3 {
+    left: 40%;
+  }
+}
+
+/* The navigation bar is fixed on the page, doesn't move with scrolling;
+   it has a changing background (coloranima); a background color is 
+   specified, in case animation doesn't work. */
+/* z-index 4 puts nav bar behind view buttons and in front of everything else.*/
+.navbar {
+  z-index: 4;
+  position: fixed;
+  width: 100%;
+  border:  1pt outset #99ccff;
+  -webkit-animation-name: coloranima;
+  -webkit-animation-duration: 150s;
+  -webkit-animation-iteration-count: infinite;
+  animation-name: coloranima;
+  animation-duration: 150s;
+  animation-iteration-count: infinite;
+  background-color: #004d00;
+}
+
+/* h3 syting is applied to the name of the page in the nav bar */
+h3 {
+  z-index: 5;
+  position: absolute;
+  /* mobile first, see @media for desktop */
+  left: 20%;
+  top: -50%;
+  padding: 0 0.25em;
+  color: #ffffcc;
+  -webkit-user-select: none; /* Safari */        
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+}
+
+/* links in nav bar */
+.navbar a {
+  display: block; /* mobile first, see @media for desktop */
+  position: relative;
+  float: right;
+  z-index: 6; /* above navbar and page title */
+  padding: 0.1em 0.25em;
+  margin: 0.25em 0.1em;  
+  color: #ffffcc;
+  text-decoration: none;
+  text-shadow: -1px 0 navy, 0 1px navy, 1px 0 navy, 0 -1px navy;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.navbar a:hover, a:focus {
+  background-color: rgb(0, 26, 51);
+  border-radius: 7px;
+}
+
+/* this normal class is used to position text other than bars and table. */
+.normal {
+  position: relative;
+  top: 5em;
+  left: 0.625em;
+}
+
+/*************************************************************************************/
+#btnRu {
+  /* Start of language buttons, to do: maybe*/
+  display: none;
+  position: relative;
+  float: right; 
+  outline: none;
+  width: 3.125em;
+  height: 2.5em;
+  margin: 5px;
+  text-align: center;
+}
