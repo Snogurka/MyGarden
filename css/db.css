@@ -1,0 +1,354 @@
+ /********** v.7 **********/
+/*to prevent zoom in safari and chrome, font-size has to be at least 16*/
+/********** database page styles **********/
+
+
+  /* TEXT AT THE BOTTOM OF THE PAGE, DESCRIBING NEW PLANT FUNCTIONALITY */
+div.addPlant > p {
+/*   display: none; */
+  position: sticky;
+  position: -webkit-sticky;
+  left: 0;
+/*   bottom: 0; */
+/*   width: 100%; */
+/*   left: 0.625em; */
+  /* z-index: 1; */
+}
+
+  /* SMALL INNER BUTTONS  */
+
+.btnRight {
+/*  replacement for btnEmpty, reserved for all delete buttons  */
+  right: -5px;
+/*   bottom: -5px; */
+}
+
+.btnLeft {
+  left: -5px;
+/*   top: -5px; */
+}
+
+/* btnInner replaces btnEmpty and btnUnqVals */
+.btnInner {
+   top: -5px;
+  position: absolute;
+  width: 3em;
+	height: 3em;
+  border-style: unset;
+  background: transparent;
+/*   color: rgba(255, 255, 255, 0.5); */
+  z-index: 7;
+}
+
+.btnImg { /* image within inner buttons */
+  width: 2em;
+  height: 2em;
+}
+
+  /*  SMALL INNER BUTTONS FOR USER NEW PLANT ADDITIONS/MODIFICATION */
+#btnNewPlantAdd, #btnNewPlantClear, #btnNewPlantCopy, #btnNewPlantSubmit {
+  position: absolute;
+  background: transparent;
+  top: 100%;
+  width: 3em;
+  height: 2em;
+  border-style: unset;
+  display: none;
+}
+
+#btnNewPlantAdd {
+  left: 25%;
+}
+
+#btnNewPlantClear {
+  right: 0;
+}
+
+#btnNewPlantCopy {
+  left: 0;
+  display: initial;
+}
+
+/* user added plant - plant names drop down */
+#btnNewPlantCopy ~ .dropUnqVals {
+  top: 115%;
+  left: 0;
+}
+
+#btnNewPlantSubmit {
+  left: 50%;
+}
+
+  /* UP AND DOWN SPEEDY BUTTONS */
+#btnDn, #btnUp {
+/*   display: none; */
+  position: fixed;
+  border: none;
+  right: 15px;
+  width: 3em;
+  height: 3em;
+  opacity: .3;
+  z-index: 11;  
+}
+
+#btnDn { /*this button shows up on scroll to take the user to the top*/
+  top: 90px;
+}
+
+#btnUp { /*this button shows up on scroll to take the user to the top*/
+  bottom: 10px;
+}
+
+#btnUp:hover, #btnDn:hover {
+  opacity: 0.7;
+}
+
+.btnUpdatePlant { /*button for recording changes within notes, action, quantity*/
+  top: 0;
+  background: rgba(178, 246, 23, 0.5);
+}
+
+/* EXPORT/IMPORT WINDOW */
+div.expImp > button {
+  top: 1px;
+  padding: 10px;
+  z-index: 9;
+  color: red;
+}
+
+div.expImp {
+  display:inline-block;
+  position:fixed;
+  left: 8em;
+  top: 8em;
+  z-index: 8;
+  padding: 0 35px;
+  opacity: 0.9;
+  border: 1px solid #001539;
+  box-shadow: 3px 3px #00179d;
+  background-color: rgb(255, 251, 244);
+}
+
+div.expImp > textarea {
+  padding: 5px ;
+  border: 1px solid #001539;
+  background-color: rgb(255, 251, 244);
+}
+
+#dropColNames, #dropExportImport {
+  position: absolute;
+  float: right;
+  top: 7em;
+  left: 8em;
+  display: none;
+}
+
+/* #dropColNames, #dropPlantNames, .dropUnqVals, #dropExportImport { */
+#dropColNames, .dropUnqVals, #dropExportImport {
+  z-index: 7;
+  max-height: 30em;
+  overflow: auto;
+/*   added on 9/24/20 for iPad scroll support */
+  webkit-overflow-scrolling: auto;
+  border-radius: 7px;
+  list-style-type: none; 
+  text-align: left;
+  padding: 5px;
+  font-size: 0.85em;
+  color: navy;
+  background-color: rgba(204, 255, 153, 0.90);
+}
+
+/* #dropPlantNames, .dropUnqVals{*/
+.dropUnqVals {
+  position: absolute;
+  top: 50%;
+  width: 12em;
+  overflow: auto;
+}
+
+#dropExportImport {
+  display: none;
+}
+
+/* COMMON NAME COLUMN, FREEZING STYLE, ENSURES THAT PLANT NAMES ARE ALWAYS SHOWN */
+.frozenCol {
+  position: sticky;
+  position: -webkit-sticky;
+  left: 0;
+  color:#ffffcc;
+  background-color: rgba(0, 39, 128, 0.85);
+  z-index: 2;
+}
+.frozenCol input {
+  width: 100%;
+  min-height: 3em;
+  font-style: italic;
+  font-size: 85%;
+}
+
+/* FILTER ROW FREEZING STYLE, ENSURES THAT FILTER ROW IS FROZEN AND ALWAYS SHOWN ON TOP */
+.frozenFilterRow {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 3.55em;
+  background-color: rgba(0, 0, 128, 1);
+  z-index: 2;
+}
+/* THE COMMON NAME (FIRST COLUMN) OF THE FILTER FREEZE IS DONE SEPARATELY */
+.filterFreeze {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 3.55em;
+  left: 0;
+  text-align: left;
+  background-color: rgba(0, 0, 128, 1); /*opaque navy*/
+  z-index: 4;
+}
+.filterInput {
+  padding: 0 0 0 1.5em;
+  color: navy;
+  width: 100%;
+  height: 100%;
+}
+.frozenFilterRow tr:hover {
+  background-color: rgba(0, 0, 128, 1);
+}
+
+/* IMAGES - SETTINGS FOR THE LAST COLUMN, ALL THE WAY TO THE RIGHT */
+img {
+  width: 4em;
+  border: 0;
+}
+
+.inputRangeMin, .inputRangeMax {
+  max-width: 3em;
+  max-height: 1.2em;
+  margin: 0 1;
+  text-align: right;
+  position: absolute;
+  right: 0;
+}
+
+/* 
+  Responsiveness for desktop and tablet, width greater than 768px
+  600 for small devices; 400 for phones, with mobile first - the default
+*/
+@media only screen and (min-width: 768px) {
+  img {
+    width: 7em;
+    max-height: auto;
+  }  
+  .narCol {
+    min-width: 7em;
+  }
+}
+
+
+.narCol {
+  min-width: 4em;
+}
+
+/* THE NEW PLANT ROW IS LOCATED AT THE BOTTOM OF THE TABLE */
+#newPlantRow {
+  background-color: rgba(255, 255, 255, 0.5);
+  visibility: hidden;
+  font-style: italic;
+}
+
+.pic:hover {
+  cursor: pointer;
+}
+
+/* PICTURE GALLERY - TODO */
+#picGal {
+  display: none;
+  position: fixed;
+  z-index: 11;
+  
+  height: 80%;
+  width: auto;
+  top: 1.8em;
+  right: 10%;
+  
+  padding: 0 10%;
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.5);
+  
+/*   transform: translate(0%);
+  transition: transform 0.3s ease-in-out; */
+}
+
+#picGal button {
+  position: absolute;
+  top: 50%;
+  height: 3em;
+  width: 3em;
+  background: transparent;
+}
+
+#picGal img {
+  width: auto;
+  height: 100%;
+}
+
+/*******************************/
+/* css animation - start of work */
+/* slides the image, not div from left */
+/*******************************/
+/* .wrapper {
+    position: absolute;
+    left: -600px;
+    animation: slide 0.5s forwards;
+    animation-delay: 0s;
+}
+@keyframes slide {
+    100% { left: 0; }
+} */
+/*******************************/
+/*******************************/
+
+
+#picGal p {
+  position: absolute;
+  bottom: 0;
+  color: white;
+}
+
+/* Settings for the data table for all plants */
+.plants {
+  position: relative;
+  top: 1.8em;
+  width: 100%;
+  border-collapse: collapse;
+  z-index: 2;
+  margin: 0 0 5em 0;
+}
+.plants td, .plants th {
+  border: 1px solid #ddd;
+  padding: 5px;
+/*   font-size: 0.85em; */
+}
+
+/* TABLE HEADERS STYLE SETTINGS AND FREEZING */
+.plants th {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 1.8em;
+  padding: 4px;
+  text-align: left;
+  color:#ffffcc;
+  background-color: rgba(0, 0, 128, 1);
+  z-index: 2;
+}
+
+.plants tr:nth-child(even) {
+  background-color: rgba(208, 218, 225, 0.5);
+}
+.plants tr:hover {
+  background-color: rgba(230, 243, 255, 1);
+}
+
+.wideCol {
+  min-width: 15em;
+}
