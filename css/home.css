@@ -16,14 +16,6 @@ img {
   transition: all .5s ease-in-out;
 }
 
-img:hover, img.diag:hover {
-  transform: scale(5) translate(-40%);
-}
-
-img.lefty:hover {
-  transform: scale(5) translate(40%);
-}
-
 img.diag {
   transform: rotate(-35deg);
 }
@@ -36,6 +28,14 @@ img.diag {
 @media only screen and (min-width: 600px) {
   .wrapper {
     margin: 10px 20px;
+  }
+  
+  img:hover, img.diag:hover {
+    transform: scale(5) translate(-40%);
+  }
+
+  img.lefty:hover, img.diag.lefty:hover  {
+    transform: scale(5) translate(40%);
   }
 }
 
