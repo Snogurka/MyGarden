@@ -1,29 +1,50 @@
-/********** v.7 **********/
+/********** v.7.1 **********/
 
 .archive {
   display: none;
 }
+
 button {
   margin: 0 45%;
 }
+
 img {
-  width: 50%;
-  height: auto;
+  height: 6em;
+  width: auto;
   padding: 0 0 0 5px;
   float: right;
+  transition: all .5s ease-in-out;
 }
+
+img:hover, img.diag:hover {
+  transform: scale(5) translate(-40%);
+}
+
+img.lefty:hover {
+  transform: scale(5) translate(40%);
+}
+
+img.diag {
+  transform: rotate(-35deg);
+}
+
 .lefty {
   padding: 0 5px 0 0;
   float: left;
 }
+
 @media only screen and (min-width: 600px) {
-  img {
-    width: 30%;
-  }
   .wrapper {
     margin: 10px 20px;
   }
 }
+
+@media (prefers-reduced-motion) {
+  img:hover, img.diag:hover {
+    transform: scale(1);
+  }
+}
+
 .wrapper {
   display: grid;
   position: absolute;
@@ -32,6 +53,7 @@ img {
   grid-gap: 5px;
   margin: 5px;
 }
+
 .wrapper > div {
   text-align: left;
   padding: 5px 0;
