@@ -7,10 +7,10 @@
    1em = 16px, based on the default font size of 16px
 */
 /*
-  - changed viewBar to barView
+  changes
 */
 
-*{
+* {
   box-sizing: border-box;
 }
 
@@ -132,16 +132,7 @@ button {
     768 - medium, 992 - large, 1200 - extra large)
 */
 @media only screen and (min-width: 600px) {
-/*   #btnView {
-    display: inline;
-  }
-  .navbar a {
-    display: inline;
-    color: purple;
-  } */
-  .navbar h3 {
-    left: 40%;
-  }
+
 }
 
 /* The navigation bar is fixed on the page, doesn't move with scrolling;
@@ -162,15 +153,16 @@ button {
   background-color: #004d00;
 }
 
-/* h3 syting is applied to the name of the page in the nav bar */
-.navbar > h3 {
+/* h1 syting is applied to the name of the page in the nav bar */
+.navbar > h1 {
 /*   adding .navbar > decentered the page name */
+  font-size: 125%;
   z-index: 5;
   position: absolute;
   /* mobile first, see @media for desktop */
   left: 40%;
   top: -50%;
-  padding: 0 0.25em;
+  padding: 0.25em;
   color: #ffffcc;
   -webkit-user-select: none; /* Safari */        
   -moz-user-select: none; /* Firefox */
