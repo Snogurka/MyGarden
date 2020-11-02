@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<!-- v.7 -->
+<!-- v.7.1 -->
 <!-- changes: 
-  -- added a photo gallery div
 -->
 <html lang="en-US">
   <head profile="http://www.w3.org/2005/10/profile">
   <head>
     <title>Garden Data</title>
     
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" href="/favicon.png">
+<!--     <link rel="icon" type="image/x-icon" href="/favicon.ico"> -->
+<!--     <link rel="icon" type="image/png" href="/favicon.png"> -->
 <!--     <link rel="apple-touch-icon" href="favicon.ico"> -->
 <!--     <link rel="mask-icon" href="favicon.ico"> -->
 <!--     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" /> -->
+    <link rel="icon" href="/favicon.ico" />
     
     <meta name="description" content="Information about plants mostly local to Eastern USA">
     <meta name="keywords" content="garden, gardening, design, local, plants">
@@ -29,19 +29,19 @@
 <!--     <script src="https://kit.fontawesome.com/a076d05399.js"></script> -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="js/dbCode.js"></script>
-    <noscript>You need to enable JavaScript to use the webpage fully</noscript>
+    <noscript>JavaScript must be enabled to fully use the webpage/</noscript>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/db.css">
   </head>
   
   <body 
-        onclick='allClicks(event)' 
-        onkeyup='allClicks(event)' 
-        onpaste='allClicks(event)' 
-        oncut='allClicks(event)'>
+        onclick="allClicks(event)" 
+        onkeyup="allClicks(event)" 
+        onpaste="allClicks(event)" 
+        oncut="allClicks(event)">
     <div class="navbar">
-      <h3>Garden</h3>
-        <button id="btnView" title="Settings"><img class='btnImg' src='pictures/btnCog.png' border=0></button>
+      <h1>Garden Data</h1>
+        <button id="btnView" title="Settings"><img class='btnImg' src="pictures/btnCog.png" border=0></button>
         <div class="barView">
           <button type="button" id="btnFull">Full View</button>
           <button type="button" id="btnDesign">Design View</button>
@@ -66,8 +66,8 @@
 <!--       in the line below, the value of the image is set to 1 - this creates a value 
       attribute that's then used in js to capture the total number of images available -->
       <img value="1" onerror="this.onerror=null; this.src='\pictures\btnCog.png'"></img>
-      <button type="button" class="btnLeft"><img class='btnImg' src='pictures/btnLeftBird.png' border=0></button>
-      <button type="button" class="btnRight"><img class='btnImg' src='pictures/btnRightBird.png' border=0></button>
+      <button type="button" class="btnLeft"><img class="btnImg" src="pictures/btnLeftBird.png" border=0></button>
+      <button type="button" class="btnRight"><img class="btnImg" src="pictures/btnRightBird.png" border=0></button>
       <p>Plant Name</p>
     </div>
     
@@ -88,8 +88,8 @@
       </p>
    </div>
     
-   <button id = "btnDn" title="To the Bottom">Down</button>
-   <button id = "btnUp" title="To the Top">Up</button>
+   <button id="btnDn" title="To the Bottom">Down</button>
+   <button id="btnUp" title="To the Top">Up</button>
 
    <script async>
   // The global variables, declared below, are here as otherwise the
