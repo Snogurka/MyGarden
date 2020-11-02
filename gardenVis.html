@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<!--   v.7  -->
+  <head>
+    <title>Garden - Visual</title>
+    <meta name="description" content="Information about plants mostly local to eastern USA">
+    <meta name="keywords" content="garden, gardening, design, local, plants">
+    <meta name="author" content="Anna Stafford">
+    <meta charset="utf-8"/>
+<!--     Research setting , maximum-scale=1.0"> below; it prevents users from resizing the document per w3.org -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--     The following meta tag has been removed from HTML 5; in HTML 4 it was needed for event handlers -->
+<!--     <meta http-equiv="Content-Script-Type" content="text/javascript"> -->    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!--     To use font awesome 5, download their library or create and account and update the code referenced below -->
+<!--     <script src="https://kit.fontawesome.com/a076d05399.js"></script> -->
+    <script src="js/visCode.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/visual.css">
+  </head>
+  <body onkeyup='tapClickKey(event)'>
+    <div class="navbar">
+<!--       <h3>Garden</h3> -->
+      <h1>Visual - in progress</h1>
+      <button id="btnView" onclick="settingsMenu(event.target)"><i title="Settings" class="fa fa-fw fa-cog"></i></button>
+<!--       <a href="gardenEdi.html"><i title="Food" class="fa fa-fw fa-cutlery"></i></a> -->
+      <a id="active" href="gardenVis.html"><i title="Design" class="fa fa-fw fa-tree"></i></a>
+      <a href="gardenDb.html"><i title="Data" class="fa fa-fw fa-table"></i></a>
+      <a href="index.html"><i title="Home" class="fa fa-fw fa-home"></i></a>
+  <!--     the language version button below is currently hidden -->
+  <!--       <a href="gardenRu.html" id="btnRu">Ru</a> -->
+    </div>
+      <svg id="svgArea" width="10000" height="10000" viewbox="0 0 10000 10000"
+           xmlns="http://www.w3.org/2000/svg"  xmlns:xlink="http://www.w3.org/1999/xlink"
+           onmousedown="mouseDown(evt)" onmousemove="mouseMove(evt)" onmouseup="mouseUp(evt)"
+           ondblclick="mouseDouble(evt)"
+           ontouchmove="touchMove(evt)" ontouchend="touchUp(evt)">
+        <title>Double click to add or remove a plant or a garden</title>
+        Sorry, your browser does not support inline SVG.
+      </svg>
+    
+    <button onclick="goUp()" id="btnUp" title="To the Top">Home</button>
+    <p unselectable="on">
+      Double tap or double click to add or remove a garden or plant. 
+      Note, your personal garden design will be saved on your computer. 
+      In order to use this page, your browser must support and allow local storage. 
+      Disable local storage restrictions at your own risk.</p>
+    <script>
+      window.onload = myMain();
+    </script>
+  </body>
+</html>
