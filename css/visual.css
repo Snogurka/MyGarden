@@ -1,0 +1,121 @@
+/********** v7 **********/
+/********** visual page **********/
+
+canvas {
+  position: relative;
+  top: 3em;
+}
+
+.editable { /*plant area name */
+  cursor: text;
+  user-modify: read-write;
+  -moz-user-modify: read-write;
+  -webkit-user-modify: read-write;
+}
+
+.editable:hover {
+  cursor: text;
+}
+
+.fauxUl { /* faux drop down, used for Sun */
+  font-size: small;
+  position: relative;
+}
+
+.fauxUl:hover, .fauxLi:hover, .plantUp:hover, .plantDown:hover {
+  cursor: pointer;
+  font-size: 100%;
+}
+
+.fauxLi { /* imitating LI in UL, for SVG; used for sun and color drop down choices*/
+  font-size: smaller;
+  text-anchor: middle;
+  position: relative;
+}
+
+.garden:hover, .plant:hover, .plantShape:hover {
+  cursor: grab;
+}
+
+/* when implementing custom icon below, use this to add html
+<span class='icon'></span> */
+/* the icon below is a new addition, not in use yet, to be developed maybe */
+/* .icon {
+    background: url('iconZinnia.jpg');
+    height: 20px;
+    width: 20px;
+    display: block;
+} */
+
+li {
+  padding: 2px;
+}
+
+p {
+  position:fixed;
+  bottom:0;
+  right:0;
+  font-size:75%;
+  margin:10px;
+  -webkit-user-select: none; /* Safari */        
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+}
+
+.plantInfo {
+  font-family: cursive;
+  overflow-x: auto;
+}
+
+.plantShape {
+  fill: rgba(204, 255, 153, 0.25);
+}
+
+
+.sizeInd {
+  font-size: 80%;
+/*   display: none; */
+}
+
+.garden .resize {
+  cursor: nwse-resize;
+}
+
+.plant .resize {
+  cursor: nesw-resize;
+}
+
+.shapy {
+  position: relative;
+  height: 100px;
+  width: 150px;
+  top: 100px;
+  left: 100px;
+  border-left: 50px solid pink;
+  border-right: 50px solid gray;
+/*   border-bottom: 00px solid blue; */
+  border-radius: 40%;
+/*   background-color: blue; */
+}
+
+svg {
+  font-family: FontAwesome;
+  font-size: 14px;
+/*   font-family: material-icons; */
+}
+
+ul.dropDown { /* this list format is used on settings button drop, add plant/garden downs */
+  position: absolute;
+  max-height: 10em;
+  min-width: 10em;
+  overflow: auto;
+  border-radius: 7px;
+  list-style-type: none;
+  text-align: left;
+  padding: 3px;
+  color: rgba(204, 255, 153, 0.90);
+  font-size: 0.4cm;
+  background-color: rgba(0, 0, 50, 0.75);
+  display: block;
+}
