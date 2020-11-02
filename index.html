@@ -14,13 +14,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <!--     To use font awesome 5, download their library or create and account and update the code referenced below -->
 <!--     <script src="https://kit.fontawesome.com/a076d05399.js"></script> -->
-    <script src="js/hmCode.js"></script>
     <link rel="stylesheet" href="css/home.css">
     <link rel="stylesheet" href="css/main.css">
+    <script src="js/hmCode.js"></script>
   </head>
   <body>
     <div class="navbar">
-      <h3>Home</h3>
+      <h1>Home Garden</h1>
   <!--     edible, below, is currently hidden until developed -->
 <!--       <a href="gardenEdi.html"><i title="Edible" class="fa fa-fw fa-cutlery"></i></a> -->
       <a href="gardenVis.html"><i title="Design" class="fa fa-fw fa-tree"></i></a>
@@ -29,44 +29,68 @@
   <!--     the language version below is currently hidden -->
       <a href="gardenRu.html" id="btnRu">Ru</a>
     </div>
-    <div class="wrapper">
-      <div>
+    <div class="leftSide">
+      <img src="pictures/dogwoodBaseL.png" alt="Dogwood tree on the side"/>
+    </div>
+    <div class="rightSide">
+      <img src="pictures/dogwoodBaseR.png" alt="Dogwood tree on the side"/>
+    </div>
+    <div class="container" onclick="containerClick(event.target)">
+      <div class="header">
         <h3><strong>Welcome</Strong> to my gardening page.</h3>
         My goal is to support the plants native to US South East, however there are a few non-locals here too.
         The table on the data <a href="gardenDb.html"><i class="fa fa-fw fa-table"></i></a> tab, has all the data I've collected so far. 
         It is only a fraction of the local flora. 
         I continue to add to the database and appreciate any feedback, which can be provided once I add the needed functionality.  
-        The visual <a href="gardenVis.html"><i class="fa fa-fw fa-tree"></i></a> tab (still under construction) is intended for designing the garden. 
+        The visual <a href="gardenVis.html"><i class="fa fa-fw fa-tree"></i></a> tab (under construction) is intended for designing the garden. 
         Plant choices in the visual tab are limited to those in database.
         If you need to "plant" something I don't have, you have to add it to the database first. 
         Any information you add will be saved on your machine only. Clearing your browsing history will also erase that data. 
       </div>
+      
       <div>
-        <img class="lefty" src="pictures/Home6.jpg" alt="Bumblebee in Swamp Leather Flower">
-        The Swamp Leather Flower doesn't offer abundant foliage but the flowers are delicate, small and beautiful. 
-        Here is one visited by a bumblebee. I've planted my Swamp Leather Flower with Coral Honeysuckle for more green. 
+        <img class="righty" src="pictures/Home9.jpg" alt="Bumblebee in Swamp Leather Flower">
+        <img class="lefty" src="pictures/Home8.jpg" alt="Bumblebee in Swamp Leather Flower">
+        To the left: a beautiful butterfly, maybe Agraulis Vanillae, on the Blood Orange Marigold, neat match of colors. 
+        To the right: also Blood Orange Marigold with a moth, might be an Ailanthus Webworm Moth. 
       </div>
       <div>
-        <img class="diag" src="pictures/Home5.jpg" alt="Bumblbees on Milkweed">
+        <img class="righty" src="pictures/Home7.jpg" alt="Bumblbees on Milkweed">
+        The swallowtail butterflies are frequent visitors of the butterfly bush. These butterfly 
+        bushes, Buddleja, are enjoyed by many flying creatures, including different types of bees, 
+        butterflies, hummingbirds and hummingbird moths. It's hard to let go of such an excellent 
+        nectar source but it's something I'd like to do as the bush is not native to North America.
+        I've read that there are non-reseeding varieties now - a great alternative to consider.
+      </div>
+      <div>
+        <img class="lefty" src="pictures/Home6.jpg" alt="Bumblebee in Swamp Leather Flower">
+        The Swamp Leather Flower doesn't offer abundant foliage but its flowers are delicate, small and very beautiful. 
+        Here is one visited by a bumblebee. I've planted my Swamp Leather Flower with Coral Honeysuckle for more green. 
+        The Swamp Leather Flower dies to the ground in winter and comes back in spring, so it doesn't get as big as its
+        neighboring honeysuckle. The flowers are mostly at your eye level, perfect for viewing pleasure.
+      </div>
+      <div>
+        <img class="righty diag" src="pictures/Home5.jpg" alt="Bumblbees on Milkweed">
         The milkweed pictured here must be the healthiest in my garden. 
         The monarchs tend to ignore it, for reasons not entirely clear to me, maybe because it is on the hairy side. 
         Whatever the reason, the milkweed continues to thrive and gets to keep all its leaves. 
-        It's been popular with bees, bumble and honey, as well as one butterfly. At one point this summer, there were 20 bumble bees
-        on it all at once. 
+        It's been popular with bees, bumble and honey, as well as one butterfly. At one point this summer of 2020, there were 20 bumble bees
+        on it all at once. Towards the end of the summer, the milkweed bugs discovered this plant and sucked lots of juice out of it 
+        but it still produced plenty of healthy seeds. 
       </div>
       <div>
         <img class="lefty" src="pictures/Home4.jpg" alt="Hummingbird on Beebalm">
         This year I've started a row of native flowers along the road that gets some sun and some partial sun.
-        The phlox got quickly eaten every time I tried planting it, as well as all the Black-eyed Susan, that was planted last year and was attempting to come back. 
-        However the newly planted Bee Balm got visited by a beautiful humming bird.
+        The phlox got quickly eaten every time I tried planting it, as well as all of the Black-eyed Susan, that was planted last year and was attempting to come back. 
+        However, the newly planted Bee Balm got visited by a beautiful humming bird.
       </div>
       <div class="archive">
-        <img src="pictures/Home3.jpg" alt="Bee on Tickseed">
+        <img class="righty" src="pictures/Home3.jpg" alt="Bee on Tickseed">
         Bumble bees have got to be the most common visitors in my garden. Here is one on a Tickseed. 
       </div>
       <div class="archive">
         <img class="lefty" src="pictures/Home2.jpg" alt="Swallowtail on Marigolds">  
-        Though marigolds are not native to North Carolina, they are beneficial for the soil and are liked 
+        Though Marigolds are not native to North Carolina, they are beneficial for the soil and are liked 
         by bumblebees, moths, and some butterflies, especially when mixed with other insect favorites. 
         On the picture to the left, a swallowtail butterfly is visiting the African Marigold planted with 
         Dwarf Zinnias and Black-Eyed Susan (late summer 2019). Rabbits are fond of the Black-Eyed Susan's leafs and young shoots. 
@@ -78,14 +102,14 @@
         I had to reapply it a lot this year, due to abundance of rabbits.
       </div>
       <div class="archive">
-        <img src="pictures/Home1.jpg" alt="Goldfinch on Rudbeckia">
+        <img class="righty" src="pictures/Home1.jpg" alt="Goldfinch on Rudbeckia">
           This photo is of a Goldfinch on a Black-Eyed Susan (Summer 2019). <br>
           I believe these beautiful birds are only this bright in the summer, grayish in winter. 
           They like to pluck all the petals off zinnias, coneflowers, rudbeckia, etc. to check the seed but just plant more and it's a win-win. 
       </div>
 
       <button type="submit" onclick="showArchive(event.target)">More</button>
-      <div>
+      <div class="footer">
         When researching the plants, I found the following sites to be very informative. Please note, that by providing links to other sites, 
         this web page does not guarantee their safety nor approve, guarantee or endorse the information or products available on these sites.
         <ul>
