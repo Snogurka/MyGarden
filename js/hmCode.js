@@ -35,7 +35,7 @@ function containerClick(tgt) {
     if (elt.className === "lefty") {
       elt.style.transform = "scale("+ scaleVal +") translate(" + -1*transVal + "%)";
     } 
-    //for diagonal picture, reapply the rotation to keep it
+    //for diagonal picture, reapply the rotation to preserve it
     else if (elt.className === "diag") {
       elt.style.transform = "scale("+ scaleVal +") translate("+ transVal + "%) rotate(-35deg)";
     }
@@ -45,17 +45,19 @@ function containerClick(tgt) {
     }
     //adjust the z-index so that the clicked photo stays on top
     transVal?elt.style.zIndex=10:elt.style.zIndex=2;
+
   }
   
-  //when an image is clicked, if it's less than 80% of the screent's width, 
-  //increase it by calling transf() function
-  if (tgt.tagName.toUpperCase()==="IMG" && 
-      tgt.getBoundingClientRect().width/window.screen.width < 0.8) {
-    //the scale adjuster is calculated so that the photo takes 90% of the screen width
-    //the translate value is about 11.5 times larger than the scale value
-    let scaleAdj = window.screen.width*0.9/tgt.getBoundingClientRect().width;
-    transf(tgt, scaleAdj, -scaleAdj*11.5);
-  } 
+  //when an image is clicked, if its width is less than container's width, 
+  //increase/scale it by calling transf() function
+  let contBndRect = document.getElementsByClassName("container")[0].getBoundingClientRect();
+  if (tgt.tagName.toUpperCase() === "IMG" && 
+      tgt.getBoundingClientRect().width < contBndRect.width) {
+    let scaleAdj = contBndRect.width / tgt.getBoundingClientRect().width;
+    //the scale adjuster is calculated so that the photo is scaled to the width of the 
+    //.container and the translate value is the percent that scale value is out of 1.35
+    transf(tgt, scaleAdj, -1.35/scaleAdj*100);
+  }
   else {
     let images = document.getElementsByTagName("img");
     for (let i = 0, len = images.length; i < len; i++){
