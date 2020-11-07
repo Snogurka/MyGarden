@@ -262,24 +262,9 @@ img {
   cursor: pointer;
 }
 
-/* PICTURE GALLERY - TODO */
 #picGal {
-  display: none;
-  position: fixed;
-  z-index: 11;
-  
-  height: 80%;
-  width: auto;
-  max-width: 80%;
   top: 1.8em;
   right: 10%;
-  
-  padding: 0 10%;
-  background-color: rgb(0,0,0); /* Fallback color */
-  background-color: rgba(0,0,0,0.5);
-  
-/*   transform: translate(0%);
-  transition: transform 0.3s ease-in-out; */
 }
 
 #picGal button {
@@ -289,28 +274,6 @@ img {
   width: 3em;
   background: transparent;
 }
-
-#picGal img {
-  width: auto;
-  height: 100%;
-}
-
-/*******************************/
-/* css animation - start of work */
-/* slides the image, not div from left */
-/*******************************/
-/* .wrapper {
-    position: absolute;
-    left: -600px;
-    animation: slide 0.5s forwards;
-    animation-delay: 0s;
-}
-@keyframes slide {
-    100% { left: 0; }
-} */
-/*******************************/
-/*******************************/
-
 
 #picGal p {
   position: absolute;
