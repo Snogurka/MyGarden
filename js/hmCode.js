@@ -1,8 +1,13 @@
 /********** v.7.1 **********/
 /* Changes:
-  -- photos on mobile: tap to increase/decrease
+  -- photos on mobile: tap to increase/decrease needs work
+  -- make the number of flowers random
+  -- flower positioning: 
+      - closer to the trunk from 20% to 30% 
+      - nothing pass 85%
 */
  
+//////////////////////////////////////////////////////////////////////
 //response to clicking on the "More" button located on the home page
 //the function shows archived photos, one at a time
 function showArchive(btn) {
@@ -20,66 +25,78 @@ function showArchive(btn) {
   }
 }
 
+//////////////////////////////////////////////////////////////////////
+//display the photo gallery
+function openGallery(tgt) {
+  let picGallery = document.getElementById("picGal");
+  if (picGallery.style.display === "block" && picGallery.children[0].src === tgt.src) {
+    picGallery.style.display = "";
+  } else {
+    picGallery.style.display = "block";
+  }
+  picGallery.children[0].src = tgt.src;
+}
 
+//////////////////////////////////////////////////////////////////////
 //this function is the responce on a click on the container class div
 function containerClick(tgt) {
   
-  //this funtion is for mobile devices with screen less than 768px only
-  //for others, the photos are smaller and are increased on hover
-  if (window.screen.width > 768) {
-//     return;
-  }
-  //the transf variable transforms the supplied element elt
-  let transf = function (elt, scaleVal, transVal) {
-    //if the picture is on the left, the translate value is negated
-    if (elt.className === "lefty") {
-      elt.style.transform = "scale("+ scaleVal +") translate(" + -1*transVal + "%)";
-    } 
-    //for diagonal picture, reapply the rotation to preserve it
-    else if (elt.className === "diag") {
-      elt.style.transform = "scale("+ scaleVal +") translate("+ transVal + "%) rotate(-35deg)";
-    }
-    //all other pictures that are on the right, scale and translate
-    else {
-      elt.style.transform = "scale("+ scaleVal +") translate("+ transVal + "%)";
-    }
-    //adjust the z-index so that the clicked photo stays on top
-    transVal?elt.style.zIndex=10:elt.style.zIndex=2;
-
+  if (tgt.type === "submit") {
+    showArchive(tgt);
+    return;
   }
   
-  //when an image is clicked, if its width is less than container's width, 
-  //increase/scale it by calling transf() function
-  let contBndRect = document.getElementsByClassName("container")[0].getBoundingClientRect();
-  if (tgt.tagName.toUpperCase() === "IMG" && 
-      tgt.getBoundingClientRect().width < contBndRect.width) {
-    let scaleAdj = contBndRect.width / tgt.getBoundingClientRect().width;
-    //the scale adjuster is calculated so that the photo is scaled to the width of the 
-    //.container and the translate value is the percent that scale value is out of 1.35
-    transf(tgt, scaleAdj, -1.35/scaleAdj*100);
-  }
-  else {
-    let images = document.getElementsByTagName("img");
-    for (let i = 0, len = images.length; i < len; i++){
-      transf(images[i], 1, 0);
-    }
+  if (tgt.tagName === "IMG") {
+    openGallery(tgt);
+    return;
   }
 }
 
-var times = 0;
-window.onscroll = function() {
-  if (times < 1000 && times%25 === 0) {
-  spring();
+var times = 0, maxTimes = 70 + Math.floor(Math.random()*10)*3, timer = null;
+
+// window.onscroll = function() {
+//   spring();
+// }
+
+window.setTimeout(callSeasons, 3000);
+// window.setTimeout(addFlower = setInterval, 1000, spring, 300);
+
+function callSeasons() {
+  let today = new Date();
+  switch (today.getMonth()) {
+    case 0, 1, 11:
+      //winter
+      //console.log("it's winter");
+      break;
+    case 2, 3, 4:
+      //spring
+      //console.log("it's spring");
+      timer = setInterval(spring, 300);
+      break;
+    case 5, 6, 7:
+      //summer
+      //console.log("it's summer");
+      break;
+    case 8, 9, 10:
+      //fall
+      //console.log("it's fall");
+      timer = setInterval(spring, 300);
+      break;
+    default:
+      //do nothing
   }
-  times++;
 }
 
 //creates and appends flower divs to the left and right margins of the page
 function spring() {
+  times++;
+  if (times > maxTimes) {
+    clearInterval(timer);
+  }
   //create a div that will represent a dogwood flower
   let flower = document.createElement("div");
-  flower.className = "flower";
-
+  flower.classList.add("flower");
+  flower.classList.add("flower1");
   //set random top and left flower position, within the left and right "margins"
   
   //limit the top offset to the the range betwen upper 25th and third of the screen, so that the flowers are on the upper branches
