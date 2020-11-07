@@ -103,6 +103,13 @@ button {
   cursor: pointer;
 }
 
+.icons {
+  height: 25px;
+  width: 25px;
+  padding: 0;
+  margin: 0;
+}
+
 /* The animation code, applied to the navigation bar on all pages */
 @keyframes coloranima {
     0%  {background-color: #004d00;}
@@ -194,6 +201,42 @@ button {
   top: 5em;
   left: 0.625em;
 }
+
+/* PICTURE GALLERY */
+#picGal {
+  display: none;
+  position: fixed;
+  z-index: 11;
+  
+  height: 80%;
+  width: auto;
+  max-width: 100%;
+  
+  padding: 0 10%;
+  background-color: rgba(0,0,0,0.5);
+  
+}
+
+#picGal img {
+  width: auto;
+  height: 100%;
+}
+
+/*******************************/
+/* css animation - start of work */
+/* slides the image, not div from left */
+/*******************************/
+/* .wrapper {
+    position: absolute;
+    left: -600px;
+    animation: slide 0.5s forwards;
+    animation-delay: 0s;
+}
+@keyframes slide {
+    100% { left: 0; }
+} */
+/*******************************/
+/*******************************/
 
 /*************************************************************************************/
 #btnRu {
