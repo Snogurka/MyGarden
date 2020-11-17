@@ -8,6 +8,10 @@ a:link {
   display: none;
 }
 
+body {
+  color: rgb(37, 83, 54);
+}
+
 button {
   margin: 0 45%;
 }
@@ -22,7 +26,7 @@ button {
 }
 
 .container > div:nth-child(even) {
-  color: rgb(73, 145, 15);
+  color: rgb(61, 61, 61);
 }
 
 .flower1, .flower2 {
@@ -54,6 +58,10 @@ button {
     65% 85%, 55% 90%, 40% 95%, 35% 90%, 25% 85%, 10% 70%, 5% 60%, 0 50%);
 }
 
+.footer, .header, .header i {
+  color: rgb(61, 61, 61);
+}
+
 @keyframes flowering {
   from {
     clip-path: circle(2px);
@@ -65,10 +73,6 @@ button {
 /*     background-color: radial-gradient(white, lightgreen, green); */
     background-color: purple;
   }
-}
-
-.footer, .header {
-  color: rgb(61, 61, 61);
 }
 
 h3 {
@@ -152,11 +156,4 @@ img.righty {
     transform: scale(1);
 /*     pointer-events: none!important; */
   }
-}
-
-#picGal {
-  bottom: 1px;
-  /*new, css3 way of centering elements*/
-  left: 50%;
-  transform: translateX(-50%);
 }
