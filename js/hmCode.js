@@ -1,10 +1,7 @@
 /********** v.7.1 **********/
 /* Changes:
-  -- photos on mobile: tap to increase/decrease needs work
-  -- make the number of flowers random
-  -- flower positioning: 
-      - closer to the trunk from 20% to 30% 
-      - nothing pass 85%
+  -- photos on mobile: limit the width to the 80% of the screen max
+  -- flower positioning
 */
  
 //////////////////////////////////////////////////////////////////////
@@ -15,7 +12,7 @@ function showArchive(btn) {
   for (let i = 0, l = pars.length; i < l; i++) {
     if (btn.innerText === "Hide Archives") {
       pars[i].style.display = "none";
-      if(i === l-1){btn.innerText = "More"};
+      if(i === l-1){btn.innerText.toUpperCase() = "MORE"};
     }
     else if (pars[i].style.display != "block") {
       pars[i].style.display = "block";
@@ -48,11 +45,14 @@ function containerClick(tgt) {
   
   if (tgt.tagName === "IMG") {
     openGallery(tgt);
-    return;
+  } else if (tgt.id === "picGal") {
+    openGallery(tgt.children[0]);
   }
 }
 
-var times = 0, maxTimes = 70 + Math.floor(Math.random()*10)*3, timer = null;
+//variables to keep track of number of flowers;
+//the max is a random number betweem 50 and 70;
+var times = 0, maxTimes = 5 + Math.floor(Math.random()*10)*2, timer = null;
 
 // window.onscroll = function() {
 //   spring();
@@ -66,24 +66,24 @@ function callSeasons() {
   switch (today.getMonth()) {
     case 0, 1, 11:
       //winter
-      //console.log("it's winter");
+      console.log("it's winter");
       break;
     case 2, 3, 4:
       //spring
-      //console.log("it's spring");
+      console.log("it's spring");
       timer = setInterval(spring, 300);
       break;
     case 5, 6, 7:
       //summer
-      //console.log("it's summer");
+      console.log("it's summer");
       break;
     case 8, 9, 10:
       //fall
-      //console.log("it's fall");
+      console.log("it's fall");
       timer = setInterval(spring, 300);
       break;
     default:
-      //do nothing
+      //do nothing or something year around, like birds and bugs flying by
   }
 }
 
@@ -93,31 +93,41 @@ function spring() {
   if (times > maxTimes) {
     clearInterval(timer);
   }
+    
   //create a div that will represent a dogwood flower
   let flower = document.createElement("div");
   flower.classList.add("flower");
   flower.classList.add("flower1");
+  
   //set random top and left flower position, within the left and right "margins"
   
-  //limit the top offset to the the range betwen upper 25th and third of the screen, so that the flowers are on the upper branches
-  let randH = Math.floor(
-    Math.random() * (window.screen.height/3-window.screen.height/24)) + 
-      Math.floor(window.screen.height/24);
-  //every random time divisible by 5, place the flower on the lower branches
-  randH % 5 === 0 ? randH += window.screen.height / 1.5 : randH;
+  //limit the top offset to the the range betwen upper 25th and third of the screen, 
+  //so that the flowers are on the upper branches
+  let randH = 0;
+  if (times%3 === 0) {
+    randH = window.screen.height/1.7 + Math.floor(Math.random()*window.screen.height/5);
+  } else {
+    randH = window.screen.height/25 + Math.floor(Math.random()*window.screen.height/4);      
+  }
   
-  //the random width is limited to the margin width, set in home.css file to: 
-  //50 for screen over 768px and 30 for under
+  //the random width is limited to the center of the margin width; the margin
+  //width is set in the home.css file to: 50 for screen over 768px and 30 for
+  //under; furthermore, if the vertical placement, randH, is inside the 3rd
+  //or 9th 9ths of the screen height, i.e. is at the branches's bases put the
+  //flowers closer to the trunk, by limiting the width
   let randW = Math.floor(
     Math.random() * 
-  //could also get the margins as below (need ...[0].currentStyle, marginLeft for windows)
-    parseInt(window.getComputedStyle(document.getElementsByClassName("container")[0]).marginLeft)/2
+  //can get the margins one of the two ways below
+    (parseInt(window.getComputedStyle(document.getElementsByClassName("container")[0]).marginLeft)/2 ||
+     parseInt(window.getComputedStyle(document.getElementsByClassName("container")[0]).currentStyle.marginLeft)/2)
+    //or
 //     (window.screen.width - document.getElementsByClassName("container")[0].getBoundingClientRect().width)/4
   );
   flower.style.top = randH + "px";
   flower.style.left = randW + "px";
 
-  //append the flower randomly to the left or right sides, onto the "margins"
+  //append the flower randomly to the left or right sides, onto the "margins"; 
+  //the logic here, if a random number is divisable by 2, place the flower on the left...
   if (Math.floor(Math.random()*Math.floor(2))%2===0) {
     document.getElementsByClassName("leftSide")[0].appendChild(flower);    
   }
