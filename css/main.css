@@ -55,6 +55,7 @@ body {
   color: rgba(204, 255, 153, 0.90);
   font-weight: bold;
   min-height: 3em;
+  padding: 1px;
 }
 .barView button:hover {
   color: yellow;
@@ -70,15 +71,15 @@ body {
   top: 2px;
   margin: 0;
   max-height: 2.5em;
-/* padding: 5px; */
+  padding: 5px;
 /*   border-radius: 50%; */
 }
 
-#btnView img {
-  -webkit-transition: -webkit-transform .8s ease-in-out;
-  transition:         transform .8s ease-in-out;
+#btnView i {
+  -webkit-transition: -webkit-transform .8s;
+  transition: transform .8s;
 }
-#btnView img:hover {
+#btnView i:hover {
   -webkit-transform: rotate(360deg);        
   transform: rotate(360deg);
 }
@@ -207,26 +208,30 @@ button {
   display: none;
   position: fixed;
   z-index: 11;
-  
   height: 80%;
-  width: auto;
-  max-width: 100%;
-  
-  padding: 0 10%;
-  background-color: rgba(0,0,0,0.5);
-  
+  top: 10%;
+  width: 90%;
+  left: 5%;
+  padding: 0 2%;
+  background-color: rgba(0,0,0,0.2);
 }
 
 #picGal img {
-  width: auto;
+  margin: auto;
+  position: relative;
   height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /*******************************/
 /* css animation - start of work */
 /* slides the image, not div from left */
 /*******************************/
-/* .wrapper {
+/* #picGal {
     position: absolute;
     left: -600px;
     animation: slide 0.5s forwards;
