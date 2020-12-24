@@ -243,7 +243,7 @@ h1 {
 
 /*************************************************************************************/
 /* Possible language buttons*/
-/* #btnRu {
+#btnRu {
   display: none;
   position: relative;
   float: right; 
@@ -252,4 +252,4 @@ h1 {
   height: 2.5em;
   margin: 5px;
   text-align: center;
-} */
+}
