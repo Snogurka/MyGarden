@@ -1,38 +1,4 @@
-/********** v.7 **********/
-/* 
-Changes:
-  -- renamed viewBar to barView
-  -- fixed an issue of adding a plant when some columns are hidden
-  -- fixed: sorting when there is a new plant row 
-  -- notes, action, qty needs work on response to cut, paste, quick erase, no value
-  -- added functionality to display a gallery on click of a picture, 
-  -- renamed photos to fileName1... to better support pic gallery
-  -- local storage of notes to only store the user's additions; 
-  -- added notesLen attribute to Notes <td> to keep the length of existing notes
-  
-TO DO:
-
- # issues: 
-  - photo gallery browsing - animate the appearance of a photo
-  - error handling on import
-  - import/export buttons
-  - standardize all buttons
-  - base sorting on previous sorting of the individual column, currently using a var sortAsc = true;
-
- # improvements:
-  - make inner buttons (drop down, upload, delete) into shapes
-  - add upload image functionality
-  - add functionality to allow users to submit their changes and additions to be added to the main db
-  - work on load time, see if reducing photo size affects page load time
- # fixes:
-  - 
- # optimization:
-  -- rework the barView buttons by adding a fork function and maybe get rid of jquery
-  -- mobile first
-  -- minimize the use of event handlers: rework custom view and more?
-  -- eliminate unnecessary tags such as <div> and <span>
-  -- minimize the use of document.getElementBy...
-*/
+/********** v.7.2 **********/
 
 /* #################
    ### IMPORTANT ###
@@ -52,8 +18,8 @@ TO DO:
 function main() {
 
   let objNotes = null,
-  objAction = null,
-  objGardenQaL = null;
+      objAction = null,
+      objGardenQaL = null;
 
   //XMLHttpRequest to pull the data from JSON file
   if (window.XMLHttpRequest) {
@@ -75,30 +41,33 @@ function main() {
       let k = Object.keys(myObj)[0];
       
       //build the HEADERS row
+      //latin name is the key, common name is 1st value, index 0, notes - 2nd, index 1, etc.
       txt += "<tr title='Click to Sort'>";
       for (let i = 0; i < l; i++) {
-        //update table headers array variable, removing the nonbreaking space for the array
-        arrHeaders.push(myObj[k][i].replaceAll("&nbsp"," "));
+        //record column names in a var, replacing html nonbreaking space with js one
+        arrHeaders.push(myObj[k][i].replaceAll("&nbsp","\xa0"));      
         if (i === 0) {
-          //latin name is added separately, as it is the key
-          arrHeaders.push(k.replaceAll("&nbsp"," "));
+          //latin name is added separately, cuz it is the key; it only needs to be done once, thus here
+          arrHeaders.push(k.replaceAll("&nbsp","\xa0"));
           //common name column header
-          txt += `<th class='frozenCol narCol' style='z-index:3;'>${myObj[k][i]}</th>`;
+          txt += `<th class='frozenCol colWidth2' style='z-index:3;'>${myObj[k][i]}`;
           //latin name column header
-          txt += `<th class='narCol'>${k}</th>`;
+          txt += `<th class='colWidth2'>${k}`;
         }
-        //headers for columns that need to be narrow, class narCol
-        else if ([2, 4, 5, 6, 8, 9, 11, 13, 14, 15, 19, 21, 22, 25, 26, 29].includes(i)){
-          txt += `<th class='narCol'>${myObj[k][i]}</th>`;
+        //the narrowest column headers, colWidth1
+        else if ([2, 3, 4, 5, 6, 7, 10, 11, 14, 15, 19, 22, 28].includes(i)){
+          txt += `<th class='colWidth1'>${myObj[k][i]}`;
+        }        
+        //med size column headers, colWidth2
+        else if ([1, 8, 9, 12, 13, 16, 17, 18, 20, 21, 23, 24, 25, 26, 27, 29].includes(i)){
+          txt += `<th class='colWidth2'>${myObj[k][i]}`;
         }
-        //headers for columns that need to be wide, class wideCol
-        else if ([1, 16, 17, 18, 20, 23, 24, 27, 28].includes(i)){
-          txt += `<th class='wideCol'>${myObj[k][i]}</th>`;
-        }
-        //headers for all other columns
+        //headers for all other columns, which there shouldn't be any at this point
         else {
-          txt += `<th>${myObj[k][i]}</th>`;
+          txt += `<th>${myObj[k][i]}`;
         }
+        //add an eye icon to each 
+        txt += "<i class='fas fa-eye'></i></th>"
       }
       txt += "</tr>";
       
@@ -145,14 +114,23 @@ function main() {
         //if the local storage is available, pull Notes,
         //Action and Quantity in Garden, if those exist
         if (typeof (Storage) !== "undefined") {
-          if (localStorage.aas_myGardenDb_Notes) {
+          try {
             objNotes = JSON.parse(localStorage.aas_myGardenDb_Notes);
+          } 
+          catch (error) {
+            //no Notes in local storage, no problem
           }
-          if (localStorage.aas_myGardenDb_Action) {
-            objAction = JSON.parse(localStorage.aas_myGardenDb_Action);
+           try {
+            objAction = JSON.parse(localStorage.aas_myGardenDb_Action); //if stored data is corrupted
           }
-          if (localStorage.aas_myGardenDb_QuantityInGarden) {
+          catch (error) {
+            //no Action in local storage, no problem
+          }
+          try {
             objGardenQaL = JSON.parse(localStorage.aas_myGardenDb_QuantityInGarden);
+          }
+          catch (error) {
+            //no Qty in Garden in local storage, no problem
           }
         }
 
@@ -220,7 +198,7 @@ function main() {
                 //remove spaces, dashes, quotes, v., (), & from the plants' names
                   + "src='pictures/" + myObj[x][0].replace((/( |-|\(|\)|v\.|&|\"|\')/g),"") + "1.jpg' " 
                   + "alt='" + myObj[x][0] + "' "
-                //great code to handle errors in images
+                //saving some good code to handle errors in images
 //                   + "onerror='this.onerror=null; this.src=\"pictures/btnCog.png\"' "
                   +"></td>";
               }
@@ -287,32 +265,31 @@ function main() {
           }
         }
         
-        //the values are added to Custom View button, located in settings drop down,
-        //at the beginning so that they can be formatted appropriately if any other 
-        //view option is clicked before Custom;
-        //the Array is created from table headers' inner texts and passed as an argument
-        addCustomViewColChoices("dropColNames",
-        Array.from(table.getElementsByTagName("th")).map(x => {return x.innerText}));
+        //creating the column drop down menu, used in custom view
+        addDropDown("dropColNames", arrHeaders);
         
         //adding export/import menu sub choices here just to keep it together
         //the Export/Import are separated from the rest of the choice name by no space 
         //on purpose, this is used later in code, the rest needs to not be \xa0
-        addCustomViewColChoices("dropExportImport",
+        addDropDown("dropExportImport",
         ["Export\xa0Notes", "Export\xa0Action", "Export\xa0Quantity In Garden", 
         "Import\xa0Notes", "Import\xa0Action", "Import\xa0Quantity In Garden"]);
 
-        
-        //if any columns have been hidden in this session, hide them for this page load too
+        //check the view type in session storage and adjust the view if needed
+        //full view is not stored, thus for it the following clause is skipped
         if (sessionStorage.hiddenColumns) {
-          let ulColNames = document.getElementById("dropColNames");
+          //if there are hidden columns, update the View Button's text;
+          document.getElementById("btnView").innerText = sessionStorage.viewName;
           let hiddenCols = sessionStorage.hiddenColumns.split(",");
-          for (let i = 0, l = ulColNames.childElementCount; i < l; i++) {
-            if (hiddenCols.includes(ulColNames.children[i].innerText)) {
-              customColumnToggle(ulColNames.children[i]);
+          //format the column names in the dropdown
+          for (let i = 0, l = arrHeaders.length; i < l; i++) {
+            //if the column is listed in sessionStorage.hiddneColumns, hide that column
+            if (hiddenCols.includes(arrHeaders[i])) {//} .replace(" ","\xa0"))) {
+              customColumnDisplay(i, false);
             }
           }
+          $("#btnCustomCols").show();
         }
-        
       }
     } else if (this.status == 404) {
       //was xhr instead of this
@@ -407,81 +384,6 @@ function impExp(tgt) {
   }
 }
 
-
-//////////////////////////////////////////////////////////////////////
-//Response to a click on any of the options in the Setting (flower) button,
-//includes all but those handled in jQuery; parameter is the clicked target
-function settingsFork(tgt) {
-  
-  //when one of the custom drop down choices (column choices) is clicked
-  if (tgt.className === "customChoice" && tgt.parentNode.id === "dropColNames") {
-    customColumnToggle(tgt);
-  }
-
-  //when the main settings cog button is clicked
-  else if ((tgt.className === "fa fa-fw fa-cog" && tgt.parentNode.id === "btnView")
-  || tgt.id === "btnView") {
-    let barView = document.getElementsByClassName("barView")[0];
-    if (barView.style.display === "") {
-      //checking for window width for mobile support;
-      if (window.innerWidth < 400) {
-        barView.style.display = "block";
-      } else {
-        barView.style.display = "inline";
-      }
-    } 
-    else {
-      cleanView();
-    }
-  }
-
-  //when the full view button is clicked
-  else if (tgt.id === "btnFull") {
-    fullView();
-  }
-
-  //when the min view button is clicked
-  else if (tgt.id === "btnMin") {
-    displayAllColumns(true);
-  }
-
-  //when the custom view button is clicked
-  else if (tgt.id === "btnCustom") {
-    document.getElementById("dropExportImport").style.display = "none";
-    if (document.getElementById("dropColNames").style.display === "block") {
-      document.getElementById("dropColNames").style.display = "none";
-    }
-    else {
-      document.getElementById("dropColNames").style.display = "block";
-    }
-  }
-    
-  //when one of the custom drop down choices (Export/Import) is clicked
-  else if ((tgt.className === "customChoice" && tgt.parentNode.id === "dropExportImport")
-          || tgt.id === "btnExportImport") {
-    //hide the Export/Import submenu
-    if (document.getElementById("dropExportImport").style.display === "block") {
-      document.getElementById("dropExportImport").style.display = "none";
-    }
-    else {
-      document.getElementById("dropExportImport").style.display = "block";
-    }
-    //when the Export/Import button is clicked
-    if (tgt.id === "btnExportImport") {
-      //hide the column names list that might've been brought up by Custom View 
-      document.getElementById("dropColNames").style.display = "none";
-      //if shown, hide the Export/Import text area and its buttons
-      let txtA = document.getElementsByClassName("expImp")[0];
-      if (txtA) {
-        txtA.parentElement.removeChild(txtA);
-      }
-    } 
-    else {
-      impExp(tgt);
-    }
-  }
-}
-
 //////////////////////////////////////////////////////////////////////
 //check if localStorage is supported by user's browser; only if yes, 
 //add the new plant row, giving user the ability to add new plant data
@@ -508,7 +410,7 @@ function addStorageFeatures() {
   catch (error) {
     console.error(error);
     addPlantInfo[0].children[0].innerText = "Local storage is not available on this machine. "
-    + "The local file restrictions might be not disabled. Disable at your own risk.";
+    + "The local file restrictions might be on. Disable at your own risk.";
   }
 //   }
 }
@@ -566,7 +468,7 @@ function appendPlantToTable(iD) {
   });
   
   //write the user added plants data into the table
-  for (let j = 0, l = table.rows[0].cells.length; j < l; j++) {
+  for (let j = 0, len = table.rows[0].cells.length; j < len; j++) {
 
     let newCell = row.insertCell(j);
 
@@ -624,15 +526,18 @@ function storeNewPlant() {
   //when a plant is added to local, it's stored in the original order, latin name before common
   addToLocal(newRow, recordNumber);
   appendPlantToTable(recordNumber);
+  //hide any hidden columns for the newly added plants
   if (sessionStorage.hiddenColumns) {
     let newRow = document.getElementById(recordNumber);
+    let ulColNames = document.getElementById("dropColNames");
     let hiddenCols = sessionStorage.hiddenColumns.split(",");
-    for (let i = 0, l = arrHeaders.length; i < l; i++) {
-      if (hiddenCols.includes(arrHeaders[i].innerText)) {
+    for (let i = 0, l = ulColNames.childElementCount; i < l; i++) {
+      if (hiddenCols.includes(ulColNames.children[i].innerText)) {
         newRow.children[i].style.display = "none";
       }
     }
   }
+  
   clearNewPlant();
 }
 
@@ -646,7 +551,7 @@ function addToLocal(row, recordNumber) {
   //it is used so that column names aren't stored with every plant row;
   //instead, the columns and headers order is matched; removed \xa0 on 9.20.20;
   let origTblHeaders = ['Latin Name', 'Common Name', 'Notes', 'Action',
-  'Class', 'Height', 'Width', 'Color', 'Leafyness', 'Bloom Time',
+  'Class', 'Height', 'Width', 'Color', 'Leaves', 'Bloom Time',
   'Fruit Time', 'Sun', 'Roots', 'Quantity In Garden', 'Natural Habitat',
   'Origin', 'Wildlife', 'Companions', 'Ally', 'Enemy', 'Soil',
   'When To Plant', 'Days To...', 'How To Prune',
@@ -888,6 +793,34 @@ function updateExistingPlant(btn) {
 }
 
 //////////////////////////////////////////////////////////////////////
+//this function copies the data of an existing plant into the new  
+//plant row for modifying it and saving on user's local machine
+function copyRow(clickedElt) {
+  let plantName = clickedElt.innerHTML;
+  let tr = table.getElementsByTagName("tr");
+  let rw = 0; 
+  //find the order number of the plant needed by searching for its name
+  //(plantName)in the array (tr)
+  for (let i = 2, l = (table.rows.length - 2); i < l; i++) {
+    if (plantName === tr[i].children[0].innerText) {
+      rw = i;
+      break;
+    }
+  }
+  clickedElt.parentElement.parentElement.removeChild(clickedElt.parentElement);
+  for (let i = 0, l = newRow.children.length; i < l; i++) {
+    //the second column (i==0, common name) has input type text and is updated differently
+    //add 2 to rw, to account for table headers and filter rows
+    if (i === 0) {
+      newRow.children[i].childNodes[0].innerText = table.rows[rw].children[i].innerText;
+    } else {
+      newRow.children[i].innerText = table.rows[rw].children[i].innerText;
+    }
+  }
+  newRow.contentEditable = true;
+}
+
+//////////////////////////////////////////////////////////////////////
 //this function sorts the data in the table by the clicked column; it's 
 //triggered by user clicking on the column header, 1st click: asc, 2nd: desc
 function sortTable(colNum) {
@@ -898,14 +831,15 @@ function sortTable(colNum) {
         yValue = null,
         switching = true,
         sortAsc = true;
-  //determine whether an ascending or descending sort needs to be done
-  //by looking at values of the first two rows
-  if (table.rows[2].children[colNum].innerText > table.rows[3].children[colNum].innerText
-     || table.rows[2].children[colNum].innerText > table.rows[table.rows.length-2].children[colNum].innerText) {
-    sortAsc=true;
-  } else {
-    sortAsc=false;
-  }
+  //determine whether an ascending or descending sortiing needs to be done
+  //by comparing values in the first two rows, more if the first two are the same
+  let rowNum = 1;
+  do {
+    rowNum++; 
+    sortAsc = (table.rows[rowNum].children[colNum].innerText > table.rows[rowNum+1].children[colNum].innerText);
+  } 
+  while (table.rows[rowNum].children[colNum].innerText === table.rows[rowNum+1].children[colNum].innerText)
+    
   // Make a loop that will continue until no switching can be done
   while (switching) {
     // no switching has been done at first
@@ -1076,7 +1010,7 @@ function filterFork(evt) {
       clickedElt.placeholder = "";
     }
     
-    //if a dropdown of unique to column values is displayed, remove it
+    //if a unique to column values dropdown menu is displayed, remove it
     if (clickedElt.parentElement.getElementsByClassName("dropUnqVals")[0]) {
       clickedElt.parentElement.removeChild(clickedElt.parentElement.getElementsByClassName("dropUnqVals")[0]);
     }
@@ -1153,50 +1087,7 @@ function filterFork(evt) {
         removeClearingBtn(forCell);
       }
     }
-
     filterData();
-  }
-  
-}
-
-//////////////////////////////////////////////////////////////////////
-//this function adds an inner button inside the filter field 
-//for clearing the text inside filter field
-function addClearingBtn(toCell) {
-  if (!toCell.getElementsByClassName("btnRight")[0]) {
-    let delBtn = document.createElement("button");
-    delBtn.className = "btnInner btnRight";
-    delBtn.title = "clear text";
-    delBtn.innerHTML = "<img class='btnImg' src='pictures/btnCut.png'>";
-    toCell.appendChild(delBtn);
-    //todo: the width adjustment is very jumpy, need another way
-    //if not a wide column class, increase the column's width by the width of the button
-    //TABLE.GET...TAGNAME has been replaced with arrHeaders
-//     if (!table.getElementsByTagName("TH")[toCell.cellIndex].classList.contains("wideCol")) {
-//       toCell.style.minWidth = toCell.getBoundingClientRect().width+delBtn.getBoundingClientRect().width+"px";
-//     }
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-//this function removes the clearing button, first checking that it's there
-function removeClearingBtn(fromCell) {
-  let delBtn = fromCell.getElementsByClassName("btnRight")[0];
-  //todo: the width adjustment is very jumpy, need another way
-  //if not a wide column class, reduce the column's width back to original
-    //TABLE.GET...TAGNAME has been replaced with arrHeaders
-//   if (!table.getElementsByTagName("TH")[fromCell.cellIndex].classList.contains("wideCol")) {
-//     fromCell.style.minWidth = fromCell.getBoundingClientRect().width-delBtn.getBoundingClientRect().width+"px";
-//   }
-  //when removing the delete button, do the clean up: 
-  if (delBtn) {
-    //clear the cell value and placeholder
-    fromCell.children[0].value = "";
-    fromCell.removeChild(delBtn);
-    //delete the removed value from filters object
-    delete (filters[fromCell.cellIndex]);
-    //update the filters object in session storage or remove it if empty
-		Object.keys(filters).length===0?sessionStorage.removeItem("filters"):sessionStorage.filters=JSON.stringify(filters);
   }
 }
 
@@ -1207,7 +1098,7 @@ function filterData() {
 
   //get all table rows 
   let tr = table.getElementsByTagName("tr");
-  // loop through all the rows, starting at 3rd row to skip headers and search row
+  // loop through all the rows, starting at 3rd row, skipping the headers and search rows
   for (let i = 2, len = tr.length - 1; i < len; i++) {
     // set the showFlag to false, meaning don't show initially
     let showFlag = true;
@@ -1288,117 +1179,6 @@ function filterData() {
   goUp();
 }
 
-//////////////////////////////////////////////////////////////////////
-//this function is called by several other functions to display all columns
-//start by looping through the rows of the table
-function displayAllColumns(orMin) {
-  let droppedElements = document.getElementById("dropColNames");
-  //in each row, loop through the columns (cells of rows) of the table 
-  //i is a row
-  for (let i = 0, len = table.rows.length; i < len; i++) {
-    //j is a column
-    for (let j = 0, l = table.rows[i].cells.length; j < l; j++) {
-      if (!orMin) {
-        //call styleDropDownChoice() for table headers only, row (i) 0
-        if (i === 0) {
-          styleDropDownChoice(true, droppedElements.children[j]);
-        }
-        table.rows[i].cells[j].style.display = "";
-      }
-
-      else //for min view, hide everything except for common name (idx 0) and picture
-      {
-        if (j != 0 && j != l - 1) {
-          if (i === 0) {
-            styleDropDownChoice(false, droppedElements.children[j]);
-          }
-          table.rows[i].cells[j].style.display = "none";
-        }
-      }
-    }
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-//this function calls displayAllColumns(), as some columns might have
-//hidden with design, custom, or maintenance views, and resets the format
-//of the column names in the drop down menu of the custom view button
-function fullView() {
-  displayAllColumns(false);
-}
-
-//////////////////////////////////////////////////////////////////////
-//this function is called on load, from main; the column choices need 
-//to be created right away, so that when design or maintenance views 
-//are selected, the custom column choices can be styled accordingly;
-//it is also called on click of Export/Import button for sub-menu
-function addCustomViewColChoices(UIname, arrValues) {
-  let elt = document.getElementById(UIname);
-  for (let i = 0, l = arrValues.length; i < l; i++) {
-    let myli = document.createElement("li");
-    myli.className = "customChoice";
-    myli.textContent = arrValues[i];
-    elt.appendChild(myli);
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-//this function hides columns based on user's selection. the selection
-//is made via drop down menu, enabled by jQuery code
-function customColumnToggle(clickedElt) {
-  let colNr = null;
-  for (let i = 0, l = clickedElt.parentElement.childElementCount; i < l; i++) {
-    if (clickedElt.parentElement.children[i].innerText === clickedElt.innerText) {
-      colNr = i;
-      break;
-    }
-  }
-  //format the li to look deselected
-  if (table.rows[0].children[colNr].style.display == "none") {
-    styleDropDownChoice(true, clickedElt);
-  } else {
-    styleDropDownChoice(false, clickedElt);
-  }
-  // loop through the rows of the table and hide the requested child (column number) of each row
-  for (let i = 0, len = table.rows.length; i < len; i++) {
-    if (table.rows[i].children[colNr].style.display == "none") {
-      table.rows[i].children[colNr].style.display = "";
-    } else {
-      table.rows[i].children[colNr].style.display = "none";
-    }
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-//this formats dropdown li choices, when a user clicks on a view and
-//selects or unselects columns to display using custom view or when a user
-//chooses a view other that full; the hidden columns are recorded in the
-//session storage here, to keep the customized view for the duration
-function styleDropDownChoice(original, colLi) {
-  //if original - format for the shown column, otherwise - hidden
-  if (original) {
-    colLi.style.color = "navy";
-    colLi.style.backgroundColor = "";
-    if (sessionStorage.hiddenColumns) {
-	    let storedHiddenCols = sessionStorage.hiddenColumns.split(",");
-  	  storedHiddenCols.splice(storedHiddenCols.indexOf(colLi.textContent), 1);
-      storedHiddenCols.length===0?sessionStorage.removeItem("hiddenColumns"):sessionStorage.hiddenColumns = storedHiddenCols;
-    }
-  }
-  else {
-    colLi.style.color = "rgba(50, 50, 50, 0.7)"; //dark grey
-    colLi.style.backgroundColor = "rgba(50, 50, 50, 0.1)"; //light grey
-    if (sessionStorage.hiddenColumns) {
-      //if it's not already there, add a column name to the hiddenCols session storage 
-      if (sessionStorage.hiddenColumns.split(",").indexOf(colLi.textContent) === -1) {
-	      sessionStorage.hiddenColumns += "," + colLi.textContent;
-      }
-    } 
-    else {
-      sessionStorage.hiddenColumns = colLi.textContent;
-    }
-  }
-}
 
 //////////////////////////////////////////////////////////////////////
 // this function pulls unique values from the column it was called and 
@@ -1435,7 +1215,11 @@ function getUnqVals(forCell) {
     for (let i = 2, l = tr.length - 2; i < l; i++) {
       //if data is already filtered, display only available choices for another clicked drop down
       if (tr[i].style.display != "none" || filters[forCell.cellIndex]) {
+        if (tr[i].style.display != "none" && filters[forCell.cellIndex] || tr[i].style.display === "none" && !filters[forCell.cellIndex] ) {
+          console.log("check filters: function getUnqVals is suspicious");
+        }
         let cellValue = tr[i].children[forCell.cellIndex].innerText;
+        //only add the value if it's not already in the array and if it's not an empty value
         if (rUnqVals.indexOf(cellValue) === -1 && cellValue.length > 0) {
           rUnqVals.push(cellValue);
         }
@@ -1452,40 +1236,180 @@ function getUnqVals(forCell) {
         }
       }
       liText.appendChild(document.createTextNode(rUnqVals[i]));
-      if (dropList.className === "dropUnqVals") {
-
-      }
       dropList.append(liText);
     }
   }
 }
 
 //////////////////////////////////////////////////////////////////////
-//this function copies the data of an existing plant into the new  
-//plant row for modifying it and saving on user's local machine
-function copyRow(clickedElt) {
-  let plantName = clickedElt.innerHTML;
-  let tr = table.getElementsByTagName("tr");
-  let rw = 0; 
-  //find the order number of the plant needed by searching for its name
-  //(plantName)in the array (tr)
-  for (let i = 2, l = (table.rows.length - 2); i < l; i++) {
-    if (plantName === tr[i].children[0].innerText) {
-      rw = i;
+//this function adds an inner button inside the filter field 
+//for clearing the text inside filter field
+function addClearingBtn(toCell) {
+  if (!toCell.getElementsByClassName("btnRight")[0]) {
+    let delBtn = document.createElement("button");
+    delBtn.className = "btnInner btnRight";
+    delBtn.title = "clear text";
+    delBtn.innerHTML = "<img class='btnImg' src='pictures/btnCut.png'>";
+    toCell.appendChild(delBtn);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+//this function removes the clearing button, first checking that it's there
+function removeClearingBtn(fromCell) {
+  let delBtn = fromCell.getElementsByClassName("btnRight")[0];
+  //when removing the delete button, do the clean up: 
+  if (delBtn) {
+    //clear the cell value and placeholder
+    fromCell.children[0].value = "";
+    fromCell.removeChild(delBtn);
+    //delete the removed value from filters object
+    delete (filters[fromCell.cellIndex]);
+    //update the filters object in session storage or remove it if empty
+		Object.keys(filters).length===0?sessionStorage.removeItem("filters"):sessionStorage.filters=JSON.stringify(filters);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+//hide new plants buttons
+function hideNewPlantBtns(tgtParents) {
+  tgtParents.querySelector("#btnNewPlantClear").style.display = "none";
+  tgtParents.querySelector("#btnNewPlantAdd").style.display = "none";
+  //TODO: uncomment when code is ready
+//   tgtParents.querySelector("#btnNewPlantSubmit").style.display = "none";
+}
+
+//////////////////////////////////////////////////////////////////////
+//this function creates a UI list for a supplied UI using supplied values
+function addDropDown(UIname, arrValues) {
+  let elt = document.getElementById(UIname);
+  for (let i = 0, l = arrValues.length; i < l; i++) {
+    let myli = document.createElement("li");
+    myli.className = "customChoice";
+    myli.textContent = arrValues[i].replaceAll("&nbsp", "\xa0");
+    elt.appendChild(myli);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+//this function is called to hide or display columns for different views
+function displayColumns(tgt) {
+  let showColName = [];
+  let viewOrder = ["Full", "Plan", "Care", "Min"];
+  //when the end of the viewOrder is reached, go back to the beginning, Full View
+  //update the button text and the name of the view, stored in session storage
+  if (viewOrder.indexOf(tgt.innerText) === viewOrder.length -1) {
+    tgt.innerText = viewOrder[0];
+  } 
+  else {
+    tgt.innerText = viewOrder[viewOrder.indexOf(tgt.innerText)+1];
+  }
+  
+  //determine which columns to show, based on the view chosen
+  switch (tgt.innerText) {
+    case "Plan":
+      showColName = ['Common\xa0Name','Notes','Action','Class','Height','Width','Color','Leaves','Bloom\xa0Time','Sun','Roots','Quantity\xa0In\xa0Garden','Natural\xa0Habitat','Origin','Wildlife','Companions','Ally','Enemy','Soil','When\xa0To\xa0Plant','Picture'];
+      break;
+    case "Care":
+      showColName = ['Common\xa0Name','Notes','Action','Soil','How\xa0To\xa0Plant','When\xa0To\xa0Plant','Days\xa0To...','How\xa0To\xa0Prune','When\xa0To\xa0Prune','Food\xa0And\xa0Water','When\xa0To\xa0Feed','Propagating','Problems','Picture'];
+      break;
+    case "Min":
+      showColName = ['Common\xa0Name','Notes','Picture'];
+      break;
+    case "Full":
+    default:
+      showColName = null;
       break;
     }
+  
+  //hide/show columns and update session storage, recording hidden
+  //columns only, full view (default) is not recorded; not using
+  //storeHiddenCol() here, as it's easier to overwrite stored entry
+  if (tgt.innerText === "Full") {
+    sessionStorage.removeItem("viewName");
+    sessionStorage.removeItem("hiddenColumns");
+    //jQuery indexing starts at 1 instead of 0, thus i+1
+    for (let i = 0, len = arrHeaders.length; i < len; i++) {
+      $("td:nth-child(" + (i+1) + "),th:nth-child(" + (i+1) + ")").show();
+    }
+    $("#btnCustomCols").hide();
+  } 
+  else {
+    //update the view name in session storage
+    sessionStorage.viewName = tgt.innerText;
+    //capture hidden columns in session storage
+    sessionStorage.hiddenColumns = arrHeaders.filter(x=>!showColName.includes(x));
+    //scroll through all columns to hide/format as specified in showColName
+    for (let i = 0, len = arrHeaders.length; i < len; i++) {
+      if (showColName.includes(arrHeaders[i])) {
+        customColumnDisplay(i, true);
+      } else {
+        customColumnDisplay(i, false);
+      }
+    }
+    $("#btnCustomCols").show();
   }
-  clickedElt.parentElement.parentElement.removeChild(clickedElt.parentElement);
-  for (let i = 0, l = newRow.children.length; i < l; i++) {
-    //the second column (i==0, common name) has input type text and is updated differently
-    //add 2 to rw, to account for table headers and filter rows
-    if (i === 0) {
-      newRow.children[i].childNodes[0].innerText = table.rows[rw].children[i].innerText;
-    } else {
-      newRow.children[i].innerText = table.rows[rw].children[i].innerText;
+}
+
+//////////////////////////////////////////////////////////////////////
+//this function toggles columns display
+function customColumnDisplay(colNr, show) {
+  let droppedElements = document.getElementById("dropColNames");
+  if (show) {
+    //show the clicked column; plus 1 for jQuery;
+    $("td:nth-child(" + (colNr+1) + "),th:nth-child(" + (colNr+1) + ")").show();
+    //style the clicked column's display in the drop down menu
+    droppedElements.children[colNr].style.color = "navy";
+    droppedElements.children[colNr].style.backgroundColor = "";
+  } 
+  else {
+    //show the clicked column; plus 1 for jQuery;
+    $("td:nth-child(" + (colNr+1) + "),th:nth-child(" + (colNr+1) + ")").hide();
+    //style the clicked column's display in the drop down menu
+    droppedElements.children[colNr].style.color = "rgba(50, 50, 50, 0.7)"; //dark grey
+    droppedElements.children[colNr].style.backgroundColor = "rgba(50, 50, 50, 0.1)"; //light grey
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+//the function updates session storage with the hidden columns,
+//to keep the customized view for the duration of the session
+function storeHiddenCol(colLiText, hide) {
+  document.getElementById("btnView").innerText = "Custom";
+  sessionStorage.viewName = "Custom";
+  if (hide) {
+    //show the columns drop down menu, the eye
+    $("#btnCustomCols").show();
+    //check if hiddenColumns exists in sessionStorage
+    if (sessionStorage.hiddenColumns) {
+      //if column name isn't already in hiddenColumns session storage, add it
+      if (sessionStorage.hiddenColumns.split(",").indexOf(colLiText) === -1) {
+	      sessionStorage.hiddenColumns += "," + colLiText;
+      }
+    } 
+    //otherwise, create hiddenColumns in sessionStorage using column name supplied
+    else {
+      sessionStorage.hiddenColumns = colLiText;
+    }
+  } 
+  else {
+    //check if hiddenColumns exists in sessionStorage
+    if (sessionStorage.hiddenColumns) {
+      //create an array from hiddenColumns values
+	    let storedHiddenCols = sessionStorage.hiddenColumns.split(",");
+      if (storedHiddenCols.includes(colLiText)) {
+        //remove the unhidden column name
+        storedHiddenCols.splice(storedHiddenCols.indexOf(colLiText), 1);
+      }
+      if (storedHiddenCols.length===0) {
+        sessionStorage.removeItem("hiddenColumns");
+      } 
+      else {
+        $("#btnCustomCols").show();
+        sessionStorage.hiddenColumns = storedHiddenCols;   
+      }
     }
   }
-  newRow.contentEditable = true;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1502,27 +1426,24 @@ function cleanView() {
   }
   //hide the picture gallery
   document.getElementById("picGal").style.display="none";
-  //collapse the settings menu view
-  document.getElementsByClassName("barView")[0].style.display = "";
   //hide the export/import menu view
   document.getElementById("dropExportImport").style.display = "none";
 }
 
+
 //////////////////////////////////////////////////////////////////////
 //this function is triggered by a click or key entry anywhere on the page;
 //it handles all events/functionality except: 
-// - done and cancel buttons of export/import window x4
 // - update and delete inner buttons of user added plants x3
 function allClicks(e) {
-  
+
 //   console.log(e.type + ", " +e.keyCode);
-  
+//   console.log(e.detail);
   let tgt = e.target;
   tgt.className==="btnImg"?tgt=tgt.parentElement:tgt;
-  
+    
   let impTextFormatCheck = function(txt) {
-    //validate the format of the data to import; the format
-    //needs to be in "Latin Name":"notes, action or quantity text"
+    //validate the format of the data to import "Latin Name":"notes, action or quantity text"
     if (txt.search(/(\".+\":\".+\")/g) > -1) {
       return true;
     }
@@ -1531,31 +1452,21 @@ function allClicks(e) {
     }
   }
 
-  //-- hover over -------------------------------------------------
-  if (e.type === "mouseover") {
-    if (tgt.id === "btnView" //the settings button
-      || tgt.parentElement.className === "barView"  //choices in the settings menu
-      || (tgt.className === "customChoice"  //choices in the custom view choice of the settings menu
-          && tgt.parentElement.parentElement.className === "barView")        
-    ) {
-      settingsFork(tgt);
-    }
-  } 
-
   //-- key entries -------------------------------------------------
-  else  if (e.type === "keyup") {
+  if (e.type === "keyup") {
     //exit if the key clicked is a tab or switching to a window
-    if ([91].includes(e.keyCode)) {
+    if (e.keyCode === 91) {
       return;
     }
-    //if return or escape keys are clicked
-    if (e.keyCode === 13 || e.keyCode === 27) {
+    //if return (13) or escape (27) keys are clicked
+    if ((e.keyCode === 13 && tgt.tagName != "TEXTAREA") || e.keyCode === 27) {
       cleanView();
     }
     //if alphanumeric text is typed in the filter row
     else if ((tgt.className === "filterInput"
              || ["inputRangeMin", "inputRangeMax"].includes(tgt.className))
-             && (tgt.value.match(/^[a-z0-9\s]+$/i) 
+//              && (tgt.value.match(/^[a-z0-9\s]+$/i) 
+             && (tgt.value.match(/^.+$/) 
                  || (e.keyCode === 8 && tgt.value.length === 0))) {
       filterFork(e);
     }
@@ -1573,12 +1484,10 @@ function allClicks(e) {
       addBtnUsrChgs(tgt);
     }
     
+    //keyup in import window
     else if (tgt.classList.contains("imp") && tgt.tagName === "TEXTAREA") {
       //if the data is in the correct format, display done button
-      if (impTextFormatCheck(tgt.value))
-//       if(tgt.value.search(/\"*[\w+\s?\.?]\":"[\w+\s?\.?]*\"/) > -1 
-//         && tgt.value.match(/\"/g).length%2 === 0) 
-      {  
+      if (impTextFormatCheck(tgt.value)) {
         tgt.parentElement.children[2].title = "Click to upload your data and close this window. Once "
           +"uploaded, refresh the page to see the added data." ;
         tgt.parentElement.children[2].style.display = "";
@@ -1587,6 +1496,8 @@ function allClicks(e) {
         tgt.parentElement.children[2].style.display = "none";
       }
     }
+    
+    //all other cases - roll up all the drop down menus
     else {
       cleanView();
     }
@@ -1601,14 +1512,14 @@ function allClicks(e) {
     //alphanumeric text is pasted into filter row
     else if ((tgt.className === "filterInput"
              || ["inputRangeMin", "inputRangeMax"].includes(tgt.className))
-             && (e.clipboardData || window.clipboardData).getData("text").match(/^[a-z0-9\s]+$/i)) {
+             && (e.clipboardData || window.clipboardData).getData("text").match(/^.+$/)) {
       filterFork(e);
     }
     //if data is pasted into Notes, Action, or Quantity in Garden columns
     else if (["Notes", "Action", "Quantity In Garden"].includes(arrHeaders[tgt.cellIndex])) {
       addBtnUsrChgs(tgt);
     }
-    //if data pasted into import window is in the correct format
+    //if data is pasted into import window
     else if (tgt.classList.contains("imp") && tgt.tagName === "TEXTAREA") {
       //if the data is in the correct format, display done button
       if (impTextFormatCheck((e.clipboardData || window.clipboardData).getData("text"))) {
@@ -1620,6 +1531,7 @@ function allClicks(e) {
         tgt.parentElement.children[2].style.display = "none";
       }
     }
+    else return;
   }
   
   //-- data is cut -------------------------------------------------
@@ -1627,7 +1539,7 @@ function allClicks(e) {
     //alphanumeric text is cut from a filter field
     if ((tgt.className === "filterInput"
          || ["inputRangeMin", "inputRangeMax"].includes(tgt.className)) 
-      && tgt.value.match(/^[a-z0-9\s]+$/i)) {
+      && tgt.value.match(/^.+$/)) {
       filterFork(e);
     }
     //handle data cut from exp/imp window
@@ -1638,6 +1550,7 @@ function allClicks(e) {
     else if (["Notes", "Action", "Quantity In Garden"].includes(arrHeaders[tgt.cellIndex])) {
       addBtnUsrChgs(tgt);
     }
+    else return;
   }
   
   //-- mouse clicks or finger taps -------------------------------------------------
@@ -1652,19 +1565,52 @@ function allClicks(e) {
       cleanView();
       goUp();
     }
-
-    //if settings button is clicked
-    else if (tgt.id === "btnView" //the settings button
-      || tgt.parentElement.className === "barView"  //choices in the settings menu
-      || (tgt.className === "customChoice"  //choices in the custom view choice of the settings menu
-          && tgt.parentElement.parentElement.className === "barView")        
-    ) {
-      settingsFork(tgt);
+    
+    //view settings
+    //btnView is clicked: scroll through views if it's a single click, show menu for a double click
+    else if (tgt.className === "fa fa-fw fa-cog" && tgt.parentElement.id === "btnView"
+       || tgt.id === "btnView") {
+          displayColumns(tgt);
+    }
+        
+    //a click on a table header's eye icon
+    else if (tgt.className === "fas fa-eye" && tgt.parentElement.tagName === "TH") {
+      customColumnDisplay(arrHeaders.indexOf(tgt.parentElement.innerText), false);
+      storeHiddenCol(tgt.parentElement.innerText, true);
     }
     
-    //if the export/import choice settings menu is clicked
-    else if (tgt.className === "customChoice" 
-             && tgt.parentElement.id === "dropExportImport") {
+    //a click on an eye icon in the nav bar
+    else if (tgt.className === "fas fa-eye" && tgt.parentElement.className === "navbar") {
+      $("#dropColNames").toggle();
+    }
+    
+    //a click on one of the custom drop down choices (column choices)
+    else if (tgt.className === "customChoice" && tgt.parentNode.id === "dropColNames") {
+      if (table.getElementsByTagName("TH")[arrHeaders.indexOf(tgt.innerText)].style.display === "none") {
+        customColumnDisplay(arrHeaders.indexOf(tgt.innerText), true);
+        storeHiddenCol(tgt.innerText, false);
+      }
+      else {
+        customColumnDisplay(arrHeaders.indexOf(tgt.innerText), false);
+        storeHiddenCol(tgt.innerText, true);
+      }
+    }
+    
+    //an import/export button of navbar is clicked
+    else if (tgt.id === "btnExportImport") {
+      $("#dropExportImport").toggle();
+      let expImpButton = document.getElementsByClassName("expImp");
+      if (expImpButton[1]) {
+        expImpButton[1].parentElement.parentElement.removeChild(expImpButton[1].parentElement);
+      }
+
+
+    }
+    
+    //when one of the Export/Import drop down choices is clicked
+    else if (tgt.className === "customChoice" && tgt.parentNode.id === "dropExportImport") {
+      //hide the Export/Import submenu
+      $("#dropExportImport").hide();
       impExp(tgt);
     }
 
@@ -1689,25 +1635,56 @@ function allClicks(e) {
     
     //tap on the import done/go button: format & load data into local storage
     else if (tgt.classList.contains("imp") && tgt.classList.contains("btnLeft")) {
-      //prior to loading, make sure:
-      //the plant's latin name exists
-      //data is in valid format
-      localStorage.setItem("aas_myGardenDb_" 
-                           + tgt.value.replace(/ /g, ""), "{" 
-                           + tgt.parentElement.children[0].value.substring(
-        tgt.parentElement.children[0].value.search('"'), 
-        tgt.parentElement.children[0].value.length)+"}");
+
+      //could check if the latin name of imported name already exists, disabled for now
+//       let latinNames = Array.from(document.getElementsByTagName("TD")).filter(x => x.cellIndex === 1).map(x=>x.innerText).filter(x=>x.length>1);
+      // the FOR loop below is faster than the FILTER function above
+//       for (i = 0; i < orAr.length; i++) {
+//         if (orAr[i].cellIndex===1){console.log(orAr[i].innerText);}
+//       }
+      
+      // ensure the correct JSON-parseable format of imported data "Latin Name":"notes, action or quantity text"
+      // by splitting the text's key value pairs, replacing double quotes with two singles ane recomposing
+
+      // ..1. starting at the first double quote, thus skipping optional title, 
+      //      split the text using delimeter: double quote follower by comma follower by optional space
+      //      thus checking that all entries end with a double quote
+      let txtEntries = tgt.parentElement.children[0].value.slice(
+        tgt.parentElement.children[0].value.search('"')+1, 
+        tgt.parentElement.children[0].value.length-1).split(/\",\s?\"/);
+    
+      // ..2. start the entry with a curly brace 
+      let formattedEntry = "{\"";    
+
+      // ..3. scroll through entries
+      for (let i = 0, len = txtEntries.length; i < len; i++) {
+
+
+        // ..4. check that each entry has a ":" key value separator
+        if (txtEntries[i].includes("\":\"")) {
+          // ..6. on the last itiration, replace the double quotes with two single quotes add a double quote and closing curly brace to the entry
+          if(i === len-1 && tgt.parentElement.children[0].value.substr(-1,1) === "\"") {
+            formattedEntry += txtEntries[i].split('":"')[0].replaceAll('"',"''")+'":"'
+              +txtEntries[i].split('":"')[1].replaceAll('"',"''")+"\"}";
+          } else {
+            // ..5. split the entry, replace the double quotes with two single quotes and reconnect the entry
+            formattedEntry += txtEntries[i].split('":"')[0].replaceAll('"',"''")
+              +'":"'+txtEntries[i].split('":"')[1].replaceAll('"',"''") + '", "';
+          }
+        }
+      }
+    
+      localStorage.setItem("aas_myGardenDb_" + tgt.value.replace(/ /g, ""),formattedEntry);
       document.body.removeChild(tgt.parentElement);
     }
 
     //if column header is clicked, sort the table using the clicked column as key
-    else if (tgt.tagName === "TH"){
-      cleanView();
+    else if (tgt.tagName === "TH") {
       sortTable(e.target.cellIndex);
     }
-
+    
     //click on filtering drop down buttons: unique values or clear filters
-      else if (["frozenFilterRow", "filterFreeze"].includes(tgt.parentElement.className)
+    else if (["frozenFilterRow", "filterFreeze"].includes(tgt.parentElement.className)
                && (tgt.classList.value === "btnInner btnLeft" 
                    || tgt.classList.value === "btnInner btnRight")
                || (tgt.parentElement.parentElement
@@ -1806,14 +1783,6 @@ function allClicks(e) {
   }
 }
 
-//////////////////////////////////////////////////////////////////////
-//hide new plants buttons
-function hideNewPlantBtns(tgtParents) {
-  tgtParents.querySelector("#btnNewPlantClear").style.display = "none";
-  tgtParents.querySelector("#btnNewPlantAdd").style.display = "none";
-  //todo: uncomment when code is ready
-//   tgtParents.querySelector("#btnNewPlantSubmit").style.display = "none";
-}
 
 //////////////////////////////////////////////////////////////////////
 //display the photo gallery
@@ -1837,38 +1806,6 @@ function openGallery(tgt) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// When the user scrolls more than 1000px from the top of the document, 
-// show the down button, pass 3000px show the up button; hide them by 
-// calling toggleScrollBtns() after 3 secs; 
-window.onscroll = function() {
-  //do both document.body.. and document.documentElement.. for different browsers
-  if (
-      (document.body.scrollTop > 2000 
-       && document.body.scrollTop < (document.body.scrollHeight-2000)
-      )
-      || 
-      (document.documentElement.scrollTop > 2000
-       && document.documentElement.scrollTop < (document.documentElement.scrollHeight-2000)
-      )
-      )
-  {
-    toggleScrollBtns();
-  }
-};
-//////////////////////////////////////////////////////////////////////
-//display the up/down buttons for 3 seconds, activated by scrolling, above
-function toggleScrollBtns() {
-  let dnButton = document.getElementById("btnDn");
-  let upButton = document.getElementById("btnUp");
-  dnButton.style.display = "block";
-  upButton.style.display = "block";
-  setTimeout(()=> {
-    dnButton.style.display="none";
-    upButton.style.display="none";
-  },3000);
-}
-
-//////////////////////////////////////////////////////////////////////
 // When the user clicks on the button, scroll to the bottom of the document
 function goDn() {
   document.body.scrollTop = document.body.scrollHeight-500;
@@ -1881,40 +1818,6 @@ function goUp() {
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
 }
-
-/********************************************************************************************************/
-/***********************************************  jQuery  ***********************************************/
-/********************************************************************************************************/
-$(document).ready(function() {
-  let droppedElements = document.getElementById("dropColNames");
-  /* this jQuery function hides certain columns, listed in columnsToHide array,
-      to create a Design view when the user clicks the Design View button.*/
-  $("#btnDesign").click(function() {
-    //display all the columns first, as in reset
-    displayAllColumns(false);
-    let i = 0;
-    let columnsToHide = ['Latin\xa0Name', 'Fruit\xa0Time', 'How\xa0To\xa0Plant', 'Days\xa0To...', 'How\xa0To\xa0Prune', 'When\xa0To\xa0Prune', 'Food\xa0And\xa0Water', 'When\xa0To\xa0Feed', 'Propagating', 'Problems'];
-    for (let col in columnsToHide) {
-      //get the index position of each column name from the columnsToHide array and add 1, as those start with one in jQuery
-      i = $("th:contains(" + columnsToHide[col] + ")").index() + 1;
-      $("td:nth-child(" + i + "),th:nth-child(" + i + ")").hide();
-      styleDropDownChoice(false, droppedElements.children[(i - 1)]);
-    }
-  });
-  /* this function creates a Maintenance view by hiding unneeded columns, listed in the columnsToHide array, when the user clicks the Maintenance View button */
-  $("#btnMaintain").click(function() {
-    //display all the columns first, as in reset
-    displayAllColumns(false);
-    let i = 0;
-    let columnsToHide = ['Latin\xa0Name', 'Class', 'Height', 'Width', 'Color', 'Leafyness', 'Bloom\xa0Time', 'Fruit\xa0Time', 'Sun', 'Roots', 'Quantity\xa0In\xa0Garden', 'Companions', 'Ally', 'Enemy', 'Natural\xa0Habitat', 'Origin', 'Wildlife'];
-    for (let col in columnsToHide) {
-      //get the index position of each column name from the columnsToHide array and add 1, as those start with one in jQuery
-      i = $("th:contains(" + columnsToHide[col] + ")").index() + 1;
-      $("td:nth-child(" + i + "),th:nth-child(" + i + ")").hide();
-      styleDropDownChoice(false, droppedElements.children[(i - 1)]);
-    }
-  });
-});
 
 //////////////////////////////////////////////////////////////////////
 //this function is never called; it's here to manually check storage size for now
