@@ -1,13 +1,10 @@
-/********** v.7.1 **********/
+/********** v.7.2 **********/
 /* this css file contains styles shared by all garden pages */
 /* units
    1in = 72pt
    1in = 96px
 	 1em is equal to the current font size
    1em = 16px, based on the default font size of 16px
-*/
-/*
-  changes
 */
 
 * {
@@ -41,11 +38,11 @@ body {
 .barView {
   display: none;
   position: absolute;
-  top: 0.25em; 
-  left: 0.5em;
+  top: 1.5em; 
+  left: 3em;
   border-radius: 7px;
   text-align: left;
-  padding: 3px 0 0 30px;
+  padding: 3px 0 0 3px;
   z-index: 5;
 }
 .barView button {
@@ -55,24 +52,23 @@ body {
   color: rgba(204, 255, 153, 0.90);
   font-weight: bold;
   min-height: 3em;
-  padding: 1px;
+  padding: 2px;
 }
 .barView button:hover {
   color: yellow;
   background-color: rgb(0, 0, 0);
 }
 /* settings button, top left, displayed on Db and Vis pages */
-#btnView {
-  display: block; /* mobile first, see @media for desktop */
+#btnView, #btnExportImport, #btnCustomCols {
+   /* mobile first, see @media for desktop */
+  display: block;
   position: relative;
   float: left;
   z-index: 6; /* above navbar and page title */
-  left: 2px;
   top: 2px;
   margin: 0;
   max-height: 2.5em;
   padding: 5px;
-/*   border-radius: 50%; */
 }
 
 #btnView i {
@@ -102,6 +98,23 @@ button {
 .customChoice:hover {
   color: #999999;
   cursor: pointer;
+}
+
+/* h1 syting is applied to the name of the page in the nav bar */
+h1 {
+/*   adding .navbar > decentered the page name */
+  font-size: 125%;
+  z-index: 5;
+  position: absolute;
+  /* mobile first, see @media for desktop */
+  left: 35%;
+  top: -50%;
+  padding: 0.25em;
+  color: #ffffcc;
+  -webkit-user-select: none; /* Safari */        
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
 }
 
 .icons {
@@ -135,14 +148,6 @@ button {
   100%  {background-color: #004d00;}  
 }
 
-/* For desktop and tablet with width greater than 768px
-   (600 for small devices; 400 for phones; 
-    768 - medium, 992 - large, 1200 - extra large)
-*/
-@media only screen and (min-width: 600px) {
-
-}
-
 /* The navigation bar is fixed on the page, doesn't move with scrolling;
    it has a changing background (coloranima); a background color is 
    specified, in case animation doesn't work. */
@@ -159,23 +164,6 @@ button {
   animation-duration: 150s;
   animation-iteration-count: infinite;
   background-color: #004d00;
-}
-
-/* h1 syting is applied to the name of the page in the nav bar */
-.navbar > h1 {
-/*   adding .navbar > decentered the page name */
-  font-size: 125%;
-  z-index: 5;
-  position: absolute;
-  /* mobile first, see @media for desktop */
-  left: 40%;
-  top: -50%;
-  padding: 0.25em;
-  color: #ffffcc;
-  -webkit-user-select: none; /* Safari */        
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* IE10+/Edge */
-  user-select: none; /* Standard */
 }
 
 /* links in nav bar */
@@ -227,6 +215,16 @@ button {
   transform: translateX(-50%);
 }
 
+/* For desktop and tablet with width greater than 768px
+   (600 for small devices; 400 for phones; 
+    768 - medium, 992 - large, 1200 - extra large)
+*/
+@media only screen and (min-width: 768px) {
+  h1 {
+    left: 45%;
+  }
+}
+
 /*******************************/
 /* css animation - start of work */
 /* slides the image, not div from left */
@@ -244,8 +242,8 @@ button {
 /*******************************/
 
 /*************************************************************************************/
-#btnRu {
-  /* Start of language buttons, to do: maybe*/
+/* Possible language buttons*/
+/* #btnRu {
   display: none;
   position: relative;
   float: right; 
@@ -254,4 +252,4 @@ button {
   height: 2.5em;
   margin: 5px;
   text-align: center;
-}
+} */
