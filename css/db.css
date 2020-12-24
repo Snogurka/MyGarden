@@ -1,51 +1,42 @@
- /********** v.7.1 **********/
+ /********** v.7.2 **********/
 /*to prevent zoom in safari and chrome, font-size has to be at least 16*/
 /********** database page styles **********/
 
 
   /* TEXT AT THE BOTTOM OF THE PAGE, DESCRIBING NEW PLANT FUNCTIONALITY */
-div.addPlant > p {
-/*   display: none; */
-  position: sticky;
-  position: -webkit-sticky;
-  right: 0;
-/*   bottom: 0; */
-/*   width: 100%; */
-/*   left: 0.625em; */
-  /* z-index: 1; */
+.addPlant {
+  position: relative;
+  bottom: 0;
+  width: 100%;
+}
+
+#btnCustomCols {
+  background: radial-gradient(#ffffcc 30%, rgba(255,255,255,0) 70%);
+  display: none;
 }
 
   /* SMALL INNER BUTTONS  */
-
-.btnRight {
-/*  replacement for btnEmpty, reserved for all delete buttons  */
-  right: -5px;
-/*   bottom: -5px; */
-}
-
-.btnLeft {
-  left: -5px;
-/*   top: -5px; */
-}
-
-/* btnInner replaces btnEmpty and btnUnqVals */
 .btnInner {
-   top: -5px;
+  top: -5px;
   position: absolute;
   width: 3em;
 	height: 3em;
   border-style: unset;
   background: transparent;
-/*   color: rgba(255, 255, 255, 0.5); */
   z-index: 7;
 }
-
 .btnImg { /* image within inner buttons */
   width: 2em;
   height: 2em;
 }
+.btnLeft {
+  left: -5px;
+}
+.btnRight {
+  right: -5px;
+}
 
-  /*  SMALL INNER BUTTONS FOR USER NEW PLANT ADDITIONS/MODIFICATION */
+  /*  SMALL INNER BUTTONS FOR ADDING & MODIFYING PLANTS BY USER */
 #btnNewPlantAdd, #btnNewPlantClear, #btnNewPlantCopy, #btnNewPlantSubmit {
   position: absolute;
   background: transparent;
@@ -55,50 +46,42 @@ div.addPlant > p {
   border-style: unset;
   display: none;
 }
-
 #btnNewPlantAdd {
   left: 25%;
 }
-
 #btnNewPlantClear {
   right: 0;
 }
-
 #btnNewPlantCopy {
   left: 0;
   display: initial;
 }
-
 /* user added plant - plant names drop down */
 #btnNewPlantCopy ~ .dropUnqVals {
   top: 115%;
   left: 0;
 }
-
 #btnNewPlantSubmit {
   left: 50%;
 }
 
   /* UP AND DOWN SPEEDY BUTTONS */
 #btnDn, #btnUp {
-  display: none;
   position: fixed;
-  border: none;
-  right: 15px;
-  width: 3em;
-  height: 3em;
-  opacity: .3;
-  z-index: 11;  
+  border:   none;
+  right:    15px;
+  width:    3em;
+  height:   3em;
+  opacity:  0.3;
+  z-index:  11;  
 }
 
 #btnDn { /*this button shows up on scroll to take the user to the top*/
-  top: 90px;
-}
-
-#btnUp { /*this button shows up on scroll to take the user to the top*/
   bottom: 10px;
 }
-
+#btnUp { /*this button shows up on scroll to take the user to the top*/
+  top: 90px;
+}
 #btnUp:hover, #btnDn:hover {
   opacity: 0.7;
 }
@@ -119,8 +102,8 @@ div.expImp > button {
 div.expImp {
   display:inline-block;
   position:fixed;
-  left: 8em;
-  top: 8em;
+  left: 2em;
+  top: 2em;
   z-index: 8;
   padding: 0 35px;
   opacity: 0.9;
@@ -138,8 +121,8 @@ div.expImp > textarea {
 #dropColNames, #dropExportImport {
   position: absolute;
   float: right;
-  top: 7em;
-  left: 8em;
+  top: 1em;
+  left: 1em;
   display: none;
 }
 
@@ -153,9 +136,9 @@ div.expImp > textarea {
   list-style-type: none; 
   text-align: left;
   padding: 5px;
-  line-height: 130%;
+  line-height: 150%;
   color: navy;
-  background-color: rgba(204, 255, 153, 0.90);
+  background-color: rgba(204, 255, 153, 0.95);
 }
 
 .dropUnqVals {
@@ -163,10 +146,6 @@ div.expImp > textarea {
   top: 50%;
   width: 12em;
   overflow: auto;
-}
-
-#dropExportImport {
-  display: none;
 }
 
 /* COMMON NAME COLUMN, FREEZING STYLE, ENSURES THAT PLANT NAMES ARE ALWAYS SHOWN */
@@ -182,7 +161,6 @@ div.expImp > textarea {
   width: 100%;
   min-height: 3em;
   font-style: italic;
-/*   font-size: 85%; */
 }
 
 /* FILTER ROW FREEZING STYLE, ENSURES THAT FILTER ROW IS FROZEN AND ALWAYS SHOWN ON TOP */
@@ -217,6 +195,7 @@ div.expImp > textarea {
 img {
   width: 4em;
   border: 0;
+  margin: 0 20%;
 }
 
 .inputRangeMin, .inputRangeMax {
@@ -226,29 +205,6 @@ img {
   text-align: right;
   position: absolute;
   right: 0;
-}
-
-/* 
-  Responsiveness for desktop and tablet, width greater than 768px
-  600 for small devices; 400 for phones, with mobile first - the default
-*/
-@media only screen and (min-width: 768px) {
-  #dropColNames, .dropUnqVals, #dropExportImport {
-    font-size: 90%;
-    line-height: 120%;
-  }
-  img {
-    width: 7em;
-    max-height: auto;
-  }  
-  .narCol {
-    min-width: 7em;
-  }
-}
-
-
-.narCol {
-  min-width: 4em;
 }
 
 /* THE NEW PLANT ROW IS LOCATED AT THE BOTTOM OF THE TABLE */
@@ -270,6 +226,7 @@ img {
 #picGal button {
   position: absolute;
   top: 50%;
+  margin: 0 1em;
   height: 3em;
   width: 3em;
   background: transparent;
@@ -281,40 +238,69 @@ img {
   color: white;
 }
 
-/* Settings for the data table for all plants */
-.plants {
+/* TABLE plants SETTINS */
+#plants {
+  table-layout: fixed;
   position: relative;
   top: 1.8em;
   width: 100%;
+  height: 50%;
   border-collapse: collapse;
   z-index: 2;
   margin: 0 0 5em 0;
 }
-.plants td, .plants th {
+
+#plants td, #plants th {
   border: 1px solid #ddd;
   padding: 5px;
-/* font-size: 0.85em; */
+  white-space: normal;
 }
 
 /* TABLE HEADERS STYLE SETTINGS AND FREEZING */
-.plants th {
+#plants th {
   position: sticky;
   position: -webkit-sticky;
   top: 1.8em;
-  padding: 4px;
+  padding: 4px 10px 4px 4px;
   text-align: left;
   color:#ffffcc;
   background-color: rgba(0, 0, 128, 1);
   z-index: 2;
 }
 
-.plants tr:nth-child(even) {
-  background-color: rgba(208, 218, 225, 0.5);
-}
-.plants tr:hover {
-  background-color: rgba(230, 243, 255, 1);
+#plants th > i {
+  position: absolute;
+  right: 1px;
+  opacity: 0.7;
 }
 
-.wideCol {
-  min-width: 15em;
+#plants tr:nth-child(even) {
+  background-color: rgba(208, 218, 225, 0.5);
+}
+
+.colWidth1 {
+  width: 8em;
+}
+.colWidth2 {
+  width: 12em;
+}
+
+/* 
+  Responsiveness for desktop and tablet, width greater than 768px
+  600 for small devices; 400 for phones, with mobile first - the default
+*/
+@media only screen and (min-width: 768px) {
+  #dropColNames, .dropUnqVals, #dropExportImport {
+/*     font-size: 90%; */
+  }
+  img {
+    width: 7em;
+    max-height: auto;
+  }
+  .colWidth1 {
+    width: 6em;
+  }
+  .colWidth2 {
+    width: 12em;
+  }
 }
