@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v.7.1 -->
+<!-- v.7.2 -->
 <!-- changes: 
 -->
 <html lang="en-US">
@@ -12,7 +12,7 @@
 <!--     <link rel="apple-touch-icon" href="favicon.ico"> -->
 <!--     <link rel="mask-icon" href="favicon.ico"> -->
 <!--     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" /> -->
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="/favicon.ico"/>
     
     <meta name="description" content="Information about plants mostly local to Eastern USA">
     <meta name="keywords" content="garden, gardening, design, local, plants">
@@ -29,31 +29,27 @@
 <!--     <script src="https://kit.fontawesome.com/a076d05399.js"></script> -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="js/dbCode.js"></script>
-    <noscript>JavaScript must be enabled to fully use the webpage/</noscript>
+    <noscript>JavaScript must be enabled to fully use the webpage</noscript>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/db.css">
   </head>
-  
   <body 
+        ondblclick="allClicks(event)"
         onclick="allClicks(event)" 
         onkeyup="allClicks(event)" 
         onpaste="allClicks(event)" 
-        oncut="allClicks(event)">
+        oncut="allClicks(event)"
+        >
     <div class="navbar">
       <h1>Garden Data</h1>
-        <button id="btnView" title="Settings"><img class='btnImg' src="pictures/btnCog.png" border=0></button>
-        <div class="barView">
-          <button type="button" id="btnFull">Full View</button>
-          <button type="button" id="btnDesign">Design View</button>
-          <button type="button" id="btnMaintain">Maintenance View</button>
-          <button type="button" id="btnMin">Min View</button>
-          <button type="button" id="btnCustom">Custom View</button>
-          <ul id="dropColNames"></ul>
-          <button type="button" id="btnExportImport">Export Import</button>
-          <ul id="dropExportImport"></ul>
-<!--           <button type="button" id="btnUploadPictures" onClick="()">Upload</button> -->
-<!--           <button type="button" id="btnSubmitPlant" onClick="()">Submit</button> -->
-      </div>
+      <button type="button" id="btnExportImport" title="Export or Import Data">I/E</button>
+      <ul id="dropExportImport"></ul>
+      <button type="button" id="btnView" title="View Type">Full</button>
+      <i id="btnCustomCols" title="Column Choices for a Custom View" class="fas fa-eye">
+        <ul id="dropColNames"></ul>
+      </i>
+<!--       <button type="button" id="btnUploadPictures" onClick="()">Upload</button> -->
+<!--       <button type="button" id="btnSubmitPlant" onClick="()">Submit</button> -->
 <!--         <a href="gardenEdi.html"><i title="Edible" class="fa fa-fw fa-cutlery"></i></a> -->
         <a href="gardenVis.html"><i title="Design" class="fa fa-fw fa-tree"></i></a>
         <a id="active" href="gardenDb.html"><i title="Data" class="fa fa-fw fa-table"></i></a>
@@ -72,7 +68,7 @@
     </div>
     
     <div>
-      <table class="plants">
+      <table id="plants">
         <!--  the table contents are dynamically loaded from a separate JSON file  -->
         <!--        so that the data can be used by this and visual tabs -->
       </table>
@@ -86,24 +82,22 @@
         The data above has been collected from various nurseries, my own experience and the internet, especially the very informative websites listed on the Home
         <a href="index.html"><i title="Home" class="fa fa-fw fa-home"></i></a> tab.
       </p>
-   </div>
+    </div>
     
-   <button id="btnDn" title="To the Bottom">Down</button>
-   <button id="btnUp" title="To the Top">Up</button>
+    <button id="btnDn" title="To the Bottom">Down</button>
+    <button id="btnUp" title="To the Top">Up</button>
 
-   <script async>
+    <script async>
   // The global variables, declared below, are here as otherwise the
-//   script tries to use them before the entire DOM Is available
-    
-     var table = document.getElementsByTagName("TABLE")[0];
-     var addedRowCounter = []; //used for accessing added plants, a unique number for each
-     var latinNamesAdded = []; //stores the latin names of added plants to avoid storing duplicates
-     var markedPlant; //stores the id of plant and of table row that needs to be deleted or modified; needs to be a compound ID so it's distinctive 
-     var filters = {}; //filters{} is a global var to support filtering multiple columns; 
-     var newRow = null;
-     var arrHeaders = [];
-//      var sortAsc = true; //todo: rework to sort based on previous sorting of the individual column; 
-    window.onload = main();//only one onload is allowed
-   </script>
-  </body>
+  //   script tries to use them before the entire DOM Is available
+      var table = document.getElementsByTagName("TABLE")[0];
+      var addedRowCounter = []; //used for accessing added plants, a unique number for each
+      var latinNamesAdded = []; //stores the latin names of added plants to avoid storing duplicates
+      var markedPlant; //stores the id of plant and of table row that needs to be deleted or modified; needs to be a compound ID so it's distinctive 
+      var filters = {}; //filters{} is a global var to support filtering multiple columns; 
+      var newRow = null;
+      var arrHeaders = [];
+      window.onload = main();//only one onload is allowed
+     </script>
+    </body>
 </html>
