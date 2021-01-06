@@ -1,10 +1,14 @@
-/********** v.7 **********/
+/********** v.7.3 **********/
 
-/* CHANGED: 
- - new: code for plant being moved in/out of a garden: 
-    - deleting a garden removes its plants from local storage too
+/*  NEW CODE, 1.1.21
+  - keep settings the same: optionality to pick a season, set warnings and units
+  - on click in the blue area 
+      - a drawing of a digging start
+      - choices of a plant or garden
+      - choices to delete all plants and gardens
+  
+
 */
-
 /* TO DO:
  - new: code for plant being moved in/out of a garden: 
     - the plant needs to "show" that it's being moved in/out of garden
@@ -208,8 +212,8 @@ function addGardenPlantMenu() {
       gId:null,
       x:parseFloat(event.target.parentElement.style.left),
       y:parseFloat(event.target.parentElement.style.top), 
-      w:240,
-      h:120,
+      w:120,
+      h:60,
       tx:0,
       ty:0,
       nm:"New Garden", 
@@ -284,7 +288,7 @@ function tapClickKey(evt) {
     }
 //     //if delete/backspace or clear are clicked todo:
 //     if (evt.keyCode === 8 || evt.keyCode === 12){
-//       mouseDouble(evt);
+//       dblTouch(evt);
 //     }
   }
 }
@@ -613,8 +617,8 @@ function addGarden(elt){
     }
   }
 
-  //to specify that a NEW planting area is created as opposed to an existing one  
-  //being loaded from local storage, the supplied id for it is intentionally null
+  //to indicate that a NEW planting area is created as opposed to an existing   
+  //one being loaded from local storage, the supplied id for it is set to null
   if (!elt.gId) {
     //setting SUN value for a new garden to a sun icon
     elt.sn = "\uf185";
@@ -1038,21 +1042,21 @@ function sunChoice(elt) {
   let cleanChoice = elt.textContent.split(" ")[0];
   switch (cleanChoice){
     case "Full":
-      multiplier = 1.00;
+      multiplier = 3.00;
       break;
     case "Part":
-      multiplier = 0.75;
+      multiplier = 2.00;
       break;
     case "Shade":
-      multiplier = 0.50;
+      multiplier = 1.00;
       break;
     default:
-      multiplier = 1.00;
+      multiplier = 3.00;
   }
   for (var i = 0; i < 3; i++){
     colorString += (colors[i]*multiplier).toString() + ", ";
   }
-  colorString += "0.60)";  //setting transparency aplha
+  colorString += "0.25)";  //setting transparency aplha
   //update the color of the rect planting area/garden
   elt.parentElement.children[0].setAttributeNS(null, "fill", colorString);
   updateStoredData(elt.parentElement.id, 7, cleanChoice);
@@ -1069,7 +1073,7 @@ function changeGardenName(elt){
 //this function updates the localStorage plant or garden data based on
 //the id supplied in chgId with the value val at index position ind
 function updateStoredData(chgId, ind, val){
-  // data is stored in localStorage at the following indeces
+  // data is stored in localStorage in the following order (indeces)
   // 0 = x
   // 1 = y
   // 2 = w, width
@@ -1104,113 +1108,125 @@ function updateStoredData(chgId, ind, val){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// var click=false; // flag to indicate when shape has been clicked
-var clickX, clickY; // stores cursor location upon first click
-var moveX=0, moveY=0; // keeps track of overall transformation
-var lastMoveX=0, lastMoveY=0; // stores previous transformation (move)
-var clickedElement = null;
-var resize = false; 
+var clickedElement = false;
+var coord = null; //coordinate of touch/click adjusted by CTM
+var offset = null; //coord adjusted by transform/translate
+var transform = null; //item 0 of clickedElement's transform baseVal
+var resize = false;   
 var moving = false;
-var scrolling = false;
-var mobileFlag = false;
+var clickX = null, clickY = null; //stores cursor location upon first click
 
-function touchUp(evt) {
-  if (mobileFlag) {
-    mouseUp(evt);
-  }
+//////////////////////////////////////////////////////////////////////////////////////
+//getMousePosition() returns the coordinates in SVG space, defined by the viewBox 
+//attribute, using the Current Transformation Matrix to convert clickX and clickY
+function getMousePosition(evt) {
+  let CTM = document.getElementById("svgArea").getScreenCTM();
+    //for mobile, if multiple touches take the first one only
+    if (evt.touches) { evt = evt.touches[0]; }
+  return {
+    x: (evt.clientX - CTM.e) / CTM.a,
+    y: (evt.clientY - CTM.f) / CTM.d
+  };
 }
 
-function touchMove(evt) {
-  if (!mobileFlag) {
-    mouseDown(evt);
-    mobileFlag = true;
-  } else {
-    mouseMove(evt);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//on mouse click or touch down, if there is no drag, display garden tools or plant features
-function mouseDown(evt) {
-  evt.stopPropagation();
+//////////////////////////////////////////////////////////////////////////////////////
+//mouse click or finger touch down
+function touchDown(evt) {
+  
+  //on mouse click or touch down, if there is no drag, display 
+  //garden tools or plant features
+  
+  //for the editable garden name
 //   if (!evt.target.classList.contains("editable")) {
+//     evt.stopPropagation();
 //     evt.preventDefault();
 //   }
-//   if (["garden","plant","plantShape","resize","plantPic"].includes(evt.target.className.baseVal)) {
-//   .some tests whether at least one element in the array passes the test implemented by the provided function
+  
+  //the some() method executes the callback function once for each element in the array
+  //until it finds the one where call back returns a true value; 
   if (["garden","plant","plantShape","resize","plantPic"].some(
-    className => evt.target.classList.contains(className))) {
+  className => evt.target.classList.contains(className))) {
+    
+    //determine if it's a move or resize
+    evt.target.classList.contains("resize")?resize = true:resize = false;
+    
+    //group support, the clicked rectangle is always a part of a group
     clickedElement = evt.target.parentElement;
-    if (evt.type === "mousedown") {
+    
+    //mobile
+    if (evt.touches) { evt = evt.touches[0]; }
+    
+    //set original click X & Y for resizing
+    if (resize){
       clickX = evt.clientX;
       clickY = evt.clientY;
-    } else if (evt.type === "touchmove") {
-      clickX = evt.touches[0].clientX;
-      clickY = evt.touches[0].clientY;
     }
-    evt.target.classList.contains("resize")?resize = true:resize=false;
-//     clickedElement.parentElement.id[0]==="g"?inGarden=clickedElement.parentElement.id:inGarden=0;
+    
+    //adjust clicked point by SVG's viewbox
+    offset = getMousePosition(evt);
+
+    //get all of clickedElement's transforms
+    let transforms = clickedElement.transform.baseVal;
+
+    //ensure the first transform is a translate transform; if the first transform
+    //is not a translation or the element does not have a transform, then add one
+    if (transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE || transforms.length === 0) {
+      let translate = document.getElementById("svgArea").createSVGTransform();
+      translate.setTranslate(0, 0);
+      clickedElement.transform.baseVal.insertItemBefore(translate, 0);
+    }
+    //get initial translation amount (item 0 is translate, as ensured above)
+    transform = transforms.getItem(0);
+    offset.x -= transform.matrix.e;
+    offset.y -= transform.matrix.f; 
   }
+  
+  //detecting a plant being moved into the garden
+//   clickedElement.parentElement.id[0]==="g"?inGarden=clickedElement.parentElement.id:inGarden=0;
+
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//this function responds to mouse move and handles moving and resizing
-function mouseMove(evt) {
-  
-  //the following clause allows moving around a mobile page
-//   if (!clickedElement && evt.type === "touchmove") {
-//     scrolling = true;
-//     return;
-//   }
-  
-  //preventing default here disables text editing, thus only prevent propagation
-  evt.stopPropagation();
-  
+function dragging(evt) {
   if (clickedElement) {
-    //stop the scrolling around when an element is being moved
-    scrolling = false;
-    hideDropDown();
-    
+    evt.preventDefault();
+    coord = getMousePosition(evt);
+
     //RESIZING
+//     if (evt.target.classList.contains("resize")) {
     if (resize) {
-      evt.preventDefault();
+      //mobile
+      if (evt.touches) { evt = evt.touches[0]; }
+
       //clicked element is set to the group, which is the parent of the rectangle
-      let rect = clickedElement.getElementsByTagName("rect")[0]; 
-      
-      //adjustments to width and height: the X and Y of the point of click/touch minus 
-      //starting X and Y point of click
-      let adjW = 0, adjH = 0; 
-      if (evt.type === "mousemove") {
-        adjW = (evt.clientX-clickX);
-        adjH = (evt.clientY-clickY);
-      } else if (evt.type === "touchmove") {
-        adjW = (evt.touches[0].clientX-clickX);
-        adjH = (evt.touches[0].clientY-clickY);
-      }  
-      
+      let rect = clickedElement.getElementsByTagName("rect")[0];
+
+      //adjustments to width and height: the X and Y of the point of click/touch 
+      //minus starting X and Y point of click
+      let adjW = evt.clientX - clickX;
+      let adjH = evt.clientY - clickY;
+
       //the new width and height are stored in newW & newGH (garden height) & newPH (plant height) 
       let newW = Number(rect.getAttributeNS(null, "width"))+adjW;
       let newGH = Number(rect.getAttributeNS(null, "height"))+adjH;
       let newPH = Number(rect.getAttributeNS(null, "height"))-adjH;
-      
+
       //if width or height can't be negative, stop resizing at 0;
       if (newW<0 || newGH<0 || newPH<0) {
         resize = false;
         return; 
       }
-      
+
       //the following resizePos is for updating the position of the resizing triangle
       let resizePos = null;
       let vOffset = Number(rect.getAttributeNS(null, "y"));
-      
+
       //update the width and height of the rectangle, which is the size setter for the group
       rect.setAttributeNS(null, "width", newW);
-      
+
       if (clickedElement.classList.contains("garden")) {
 	      rect.setAttributeNS(null, "height", newGH);
         resizePos = "br";
         vOffset += Number(rect.getAttributeNS(null, "height"));
-        
       } else if (clickedElement.classList.contains("plant")) {
         rect.setAttributeNS(null, "x", Number(rect.getAttributeNS(null, "x"))-adjW/2);
         rect.setAttributeNS(null, "height", newPH);
@@ -1218,7 +1234,7 @@ function mouseMove(evt) {
         resizePos = "tr";
         adjW /=2;
       }
-      
+
       //update the positions of size indicators
       let elts = clickedElement.getElementsByClassName("sizeInd");
       for (let i = 0; i < 2; i++){
@@ -1240,90 +1256,47 @@ function mouseMove(evt) {
         null, 
         "points",
         createTriPts(Number(rect.getAttributeNS(null, "x"))+newW, vOffset, resizePos));
-      
-      //the clickX and clickY need to be continuously updated
-      if (evt.type === "mousemove") {
-        clickX = evt.clientX;
-        clickY = evt.clientY;
-      } else if (evt.type === "touchmove") {
-        clickX = evt.touches[0].clientX;
-        clickY = evt.touches[0].clientY;
-      }
+
+      //the sizing clickX and clickY need to be continuously updated 
+      //so that the size change is not cumulative
+      clickX = evt.clientX;
+      clickY = evt.clientY;
     }
-    
+
     //MOVING
     else {
-	    moving = true;
-      let offsetX = 0, offsetY = 0;
-//    replaced clickedElement.getTransformToElement() with clickedElement.getCTM()) on 1.20.2020
-      if (lastMoveX===0){
-        lastMoveX = clickedElement.getCTM().e;
-      }
-      if (lastMoveY===0){
-        lastMoveY = clickedElement.getCTM().f;
-      }
-      //when a plant is moved within a garden, offset its transform translate by the garden's transform translate
-      if (clickedElement.parentElement.id[0] === "g") {
-        offsetX = Number(clickedElement.parentElement.getAttributeNS(null, "transform").replace(/(translate\(|\))/g,"").split(",")[0]);
-        offsetY = Number(clickedElement.parentElement.getAttributeNS(null, "transform").replace(/(translate\(|\))/g,"").split(",")[1]);
-      }
-      //for desktop/laptop
-      if (evt.type === "mousemove") {
-        moveX = lastMoveX + (evt.clientX-clickX) - offsetX;
-        moveY = lastMoveY + (evt.clientY-clickY) - offsetY;
-      } 
-      //for mobile
-      else if (evt.type === "touchmove") {
-        moveX = lastMoveX + (evt.touches[0].clientX-clickX) - offsetX;
-        moveY = lastMoveY + (evt.touches[0].clientY-clickY) - offsetY;
-      }
-//       console.log(
-//       "moving " + 
-//       (Number(clickedElement.getAttributeNS(null, "transform").replace("translate(","").replace(")","").split(",")[0])
-//       +Number(clickedElement.children[0].getAttributeNS(null, "x")))
-//       );
-      clickedElement.setAttribute("transform", "translate(" + moveX + "," + moveY + ")");
+      moving = true;
+      transform.setTranslate(coord.x - offset.x, coord.y - offset.y);
     }
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//on mouse up within svg area, this function records new plant or garden position in local storage
-function mouseUp(evt) {
-//   //if just moving a finger around and scrolling, don't need to do anything
-//   if (scrolling && evt.type === "touchstart") {
-//     scrolling = false;
-//     return;
-//   }
-  
-  if ((!moving && !resize) && evt.target.id === "svgArea") {
-    hideDropDown();
-    return;
-  }
-  
+function touchUp(evt) {
+
   //record new plant or garden position in local storage when it's been moved
   if (clickedElement && moving) {
-    updateStoredData(clickedElement.id, 4, moveX);
-	  updateStoredData(clickedElement.id, 5, moveY);
+    updateStoredData(clickedElement.id, 4, coord.x - offset.x);
+    updateStoredData(clickedElement.id, 5, coord.y - offset.y);
+    
     //check if the plant intersects a garden, first making sure there are gardens to intersect
     if (clickedElement.id[0] === "p") {
       let grdns = localStorage.aas_myGardenVs_grdns;
       if(grdns) {
         grdns = grdns.split(",");
-        console.log("plant at [" + 
-                    (Number(clickedElement.children[0].getAttributeNS(null, "x")) + 
-                    Number(clickedElement.getAttribute("transform").replace(/translate\(|\)/g,"").split(",")[0])) +
-                    ", " + 
-                    (Number(clickedElement.children[0].getAttributeNS(null, "y")) + 
-                    Number(clickedElement.getAttribute("transform").replace(/translate\(|\)/g,"").split(",")[1])) + 
-                    "]"
-                   );
+//         console.log("plant at [" + 
+//                     (Number(clickedElement.children[0].getAttributeNS(null, "x")) + 
+//                     Number(clickedElement.getAttribute("transform").replace(/translate\(|\)/g,"").split(",")[0])) +
+//                     ", " + 
+//                     (Number(clickedElement.children[0].getAttributeNS(null, "y")) + 
+//                     Number(clickedElement.getAttribute("transform").replace(/translate\(|\)/g,"").split(",")[1])) + 
+//                     "]"
+//                    );
 //         check if a plant is moved into a garden
         checkForIntersect(grdns);
       } 
     }
   }
-  
+
   //record new plant or garden size in local storage when it's been resized
   if (clickedElement && resize) {
     updateStoredData(
@@ -1335,7 +1308,7 @@ function mouseUp(evt) {
       3, 
       Number(clickedElement.getElementsByTagName("rect")[0].getAttributeNS(null, "height"))/sizeAdj);
   }
-  
+
   //the following calls forks with different functionality for when a plant or garden has been tapped
   if (!moving) {
     if (evt.target.classList.contains("plant")
@@ -1348,13 +1321,10 @@ function mouseUp(evt) {
       gardenFork(evt.target);
     }
   }
-  
+
   moving = false;
   resize = false;
   clickedElement = null;
-  lastMoveX = 0;
-  lastMoveY = 0;
-  mobileFlag = false;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1481,7 +1451,7 @@ function toggleSunDropDown(grpOfClkdElt) {
 
 //////////////////////////////////////////////////////////////////////
 //this function is triggered by double click, which is set in html SVG element
-function mouseDouble(evt) {
+function dblTouch(evt) {
   
   hideDropDown();
   
