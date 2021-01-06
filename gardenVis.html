@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en-US">
-<!--   v.7  -->
+<!--   v.7.3  -->
   <head>
     <title>Garden - Visual</title>
     <meta name="description" content="Information about plants mostly local to eastern USA">
@@ -21,7 +21,7 @@
   <body onkeyup='tapClickKey(event)'>
     <div class="navbar">
 <!--       <h3>Garden</h3> -->
-      <h1>Visual - in progress</h1>
+      <h1>Garden Design - in progress</h1>
       <button id="btnView" onclick="settingsMenu(event.target)"><i title="Settings" class="fa fa-fw fa-cog"></i></button>
 <!--       <a href="gardenEdi.html"><i title="Food" class="fa fa-fw fa-cutlery"></i></a> -->
       <a id="active" href="gardenVis.html"><i title="Design" class="fa fa-fw fa-tree"></i></a>
@@ -30,11 +30,18 @@
   <!--     the language version button below is currently hidden -->
   <!--       <a href="gardenRu.html" id="btnRu">Ru</a> -->
     </div>
-      <svg id="svgArea" width="10000" height="10000" viewbox="0 0 10000 10000"
+      <svg id="svgArea" width="1000" height="2000" viewbox="0 0 1000 2000"
            xmlns="http://www.w3.org/2000/svg"  xmlns:xlink="http://www.w3.org/1999/xlink"
-           onmousedown="mouseDown(evt)" onmousemove="mouseMove(evt)" onmouseup="mouseUp(evt)"
-           ondblclick="mouseDouble(evt)"
-           ontouchmove="touchMove(evt)" ontouchend="touchUp(evt)">
+           onmousedown="touchDown(evt)" 
+           onmousemove="dragging(evt)" 
+           onmouseup="touchUp(evt)" 
+           onmouseleave="touchUp(evt)"
+           ondblclick="dblTouch(evt)"
+           ontouchstart="touchDown(evt)" 
+           ontouchmove="dragging(evt)" 
+           ontouchend="touchUp(evt)"
+           ontouchleave="touchUp(evt)"
+           ontouchcancel="touchUp(evt)">
         <title>Double click to add or remove a plant or a garden</title>
         Sorry, your browser does not support inline SVG.
       </svg>
