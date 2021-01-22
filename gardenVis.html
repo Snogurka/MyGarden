@@ -20,9 +20,10 @@
   </head>
   <body onkeyup='tapClickKey(event)'>
     <div class="navbar">
-<!--       <h3>Garden</h3> -->
-      <h1>Garden Design - in progress</h1>
-      <button id="btnView" onclick="settingsMenu(event.target)"><i title="Settings" class="fa fa-fw fa-cog"></i></button>
+      <button id="btnView" onclick="settingsMenu(event.target)">
+        <i title="Settings" class="fa fa-fw fa-cog"></i>
+      </button>
+      <h1>Garden Design</h1>
 <!--       <a href="gardenEdi.html"><i title="Food" class="fa fa-fw fa-cutlery"></i></a> -->
       <a id="active" href="gardenVis.html"><i title="Design" class="fa fa-fw fa-tree"></i></a>
       <a href="gardenDb.html"><i title="Data" class="fa fa-fw fa-table"></i></a>
@@ -30,28 +31,27 @@
   <!--     the language version button below is currently hidden -->
   <!--       <a href="gardenRu.html" id="btnRu">Ru</a> -->
     </div>
-      <svg id="svgArea" width="1000" height="2000" viewbox="0 0 1000 2000"
-           xmlns="http://www.w3.org/2000/svg"  xmlns:xlink="http://www.w3.org/1999/xlink"
-           onmousedown="touchDown(evt)" 
-           onmousemove="dragging(evt)" 
-           onmouseup="touchUp(evt)" 
-           onmouseleave="touchUp(evt)"
+      <svg id="svgArea" xmlns="http://www.w3.org/2000/svg"  xmlns:xlink="http://www.w3.org/1999/xlink"
+           onmousedown="touchDown(evt)" onmousemove="dragging(evt)" onmouseup="touchUp(evt)" onmouseleave="touchUp(evt)"
            ondblclick="dblTouch(evt)"
-           ontouchstart="touchDown(evt)" 
-           ontouchmove="dragging(evt)" 
-           ontouchend="touchUp(evt)"
-           ontouchleave="touchUp(evt)"
-           ontouchcancel="touchUp(evt)">
+           ontouchstart="touchDown(evt)" ontouchmove="dragging(evt)" ontouchend="touchUp(evt)" 
+           ontouchleave="touchUp(evt)" ontouchcancel="touchUp(evt)">
+        <defs>
+        </defs>
+  
         <title>Double click to add or remove a plant or a garden</title>
         Sorry, your browser does not support inline SVG.
       </svg>
     
     <button onclick="goUp()" id="btnUp" title="To the Top">Home</button>
+<!--     <p style="position: fixed; top:30; left=30;" id="updates">Updates</p> -->
     <p unselectable="on">
-      Double tap or double click to add or remove a garden or plant. 
+<!--       need a button to hide the instructions -->
+      Double tap or double click to add or remove a garden or a plant. 
       Note, your personal garden design will be saved on your computer. 
-      In order to use this page, your browser must support and allow local storage. 
-      Disable local storage restrictions at your own risk.</p>
+      To use this page, your browser must support and allow local storage. 
+      Disable local storage restrictions at your own risk.
+    </p>
     <script>
       window.onload = myMain();
     </script>
