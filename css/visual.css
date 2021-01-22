@@ -1,4 +1,4 @@
-/********** v7 **********/
+/********** v7.3 **********/
 /********** visual page **********/
 
 canvas {
@@ -11,10 +11,8 @@ canvas {
   user-modify: read-write;
   -moz-user-modify: read-write;
   -webkit-user-modify: read-write;
-}
-
-.editable:hover {
-  cursor: text;
+  text-align: center;
+  white-space: nowrap; 
 }
 
 .fauxUl { /* faux drop down, used for Sun */
@@ -37,15 +35,10 @@ canvas {
   cursor: grab;
 }
 
-/* when implementing custom icon below, use this to add html
-<span class='icon'></span> */
-/* the icon below is a new addition, not in use yet, to be developed maybe */
-/* .icon {
-    background: url('iconZinnia.jpg');
-    height: 20px;
-    width: 20px;
-    display: block;
-} */
+/* the garden fill color is set in js */
+.garden .resize {
+  cursor: nwse-resize;
+}
 
 li {
   padding: 2px;
@@ -68,22 +61,21 @@ p {
   overflow-x: auto;
 }
 
+.plant .resize {
+  cursor: nesw-resize;
+}
+
 .plantShape {
   fill: rgba(204, 255, 153, 0.25);
 }
 
+.resize {
+  fill: rgba(65, 68, 65, 0.15);
+}
 
 .sizeInd {
   font-size: 80%;
 /*   display: none; */
-}
-
-.garden .resize {
-  cursor: nwse-resize;
-}
-
-.plant .resize {
-  cursor: nesw-resize;
 }
 
 .shapy {
@@ -102,7 +94,6 @@ p {
 svg {
   font-family: FontAwesome;
   font-size: 14px;
-/*   font-family: material-icons; */
 }
 
 ul.dropDown { /* this list format is used on settings button drop, add plant/garden downs */
