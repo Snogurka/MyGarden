@@ -1,4 +1,4 @@
-/********** v.7.2 **********/
+/********** v.7.3 **********/
 /* this css file contains styles shared by all garden pages */
 /* units
    1in = 72pt
@@ -13,7 +13,7 @@
 
 /* Current navbar link, i.e. selected page */
 #active {
-  background-color: #e6faff;
+  background-color: rgb(0, 0, 70);
   border-radius: 7px;
 }
 
@@ -34,39 +34,36 @@ body {
   font-family: FontAwesome, 'Big Caslon', 'Book Antiqua', 'Palatino Linotype', 'Georgia', 'serif';
 }
 
-/* settings for the view bar: a vertical menu bar that contains view choices (db) or settings (vis) */
-.barView {
-  display: none;
-  position: absolute;
-  top: 1.5em; 
-  left: 3em;
-  border-radius: 7px;
-  text-align: left;
-  padding: 3px 0 0 3px;
-  z-index: 5;
+/* UP AND DOWN SPEEDY BUTTONS */
+#btnDn, #btnUp {
+  position: fixed;
+  border:   none;
+  right:    15px;
+  width:    3em;
+  height:   3em;
+  opacity:  0.2;
+  z-index:  11;  
 }
-.barView button {
-  display: block;
-  min-width: 7em;
-  border: 0;
-  color: rgba(204, 255, 153, 0.90);
-  font-weight: bold;
-  min-height: 3em;
-  padding: 2px;
+
+#btnDn { /*this button shows up on scroll to take the user to the top*/
+  top: 90px;
 }
-.barView button:hover {
-  color: yellow;
-  background-color: rgb(0, 0, 0);
+#btnUp { /*this button shows up on scroll to take the user to the top*/
+  bottom: 10px;
 }
-/* settings button, top left, displayed on Db and Vis pages */
-#btnView, #btnExportImport, #btnCustomCols {
+#btnUp:hover, #btnDn:hover {
+  opacity: 0.7;
+}
+
+/* settings button, top left, displayed on Db (as Full, initially) and Vis pages */
+#btnView, #btnExportImport, #btnCustomCols, #btnClearAllFilters {
    /* mobile first, see @media for desktop */
   display: block;
   position: relative;
   float: left;
   z-index: 6; /* above navbar and page title */
   top: 2px;
-  margin: 0;
+  margin: 0.5em 0.25em;
   max-height: 2.5em;
   padding: 5px;
 }
@@ -83,6 +80,7 @@ body {
   -webkit-transform: rotate(360deg);        
   transform: rotate(360deg);
 }
+
 /* general settings for all buttons */
 button {
   font-family: Arial, Helvetica, sans-serif;
@@ -101,27 +99,26 @@ button {
 }
 
 /* h1 syting is applied to the name of the page in the nav bar */
+/* mobile, see @media for desktop */
 h1 {
-/*   adding .navbar > decentered the page name */
-  font-size: 125%;
+  font-size: 150%;
   z-index: 5;
   position: absolute;
-  /* mobile first, see @media for desktop */
-  left: 35%;
-  top: -50%;
-  padding: 0.25em;
+  width: 10em;
+  margin: 0.25em 30%;
+  text-align: center;
   color: #ffffcc;
+/* don't allow selection, so that user can drag objects on visual tab without selecting the title */
   -webkit-user-select: none; /* Safari */        
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE10+/Edge */
   user-select: none; /* Standard */
 }
 
-.icons {
-  height: 25px;
-  width: 25px;
-  padding: 0;
-  margin: 0;
+@media only screen and (min-width: 768px) {
+  h1 {
+    margin: 0.25em 45%;
+  }
 }
 
 /* The animation code, applied to the navigation bar on all pages */
@@ -168,12 +165,12 @@ h1 {
 
 /* links in nav bar */
 .navbar a {
-  display: block; /* mobile first, see @media for desktop */
+  display: block;
   position: relative;
   float: right;
   z-index: 6; /* above navbar and page title */
-  padding: 0.1em 0.25em;
-  margin: 0.25em 0.1em;  
+  padding: 0.4em;
+  margin: 0.25em 0.25em 0.25em 0;
   color: #ffffcc;
   text-decoration: none;
   text-shadow: -1px 0 navy, 0 1px navy, 1px 0 navy, 0 -1px navy;
@@ -219,11 +216,7 @@ h1 {
    (600 for small devices; 400 for phones; 
     768 - medium, 992 - large, 1200 - extra large)
 */
-@media only screen and (min-width: 768px) {
-  h1 {
-    left: 45%;
-  }
-}
+
 
 /*******************************/
 /* css animation - start of work */
