@@ -1,4 +1,28 @@
-/********** v.7.2 **********/
+/********** v.7.3 **********/
+/* 
+TODO:
+ # fixed: 
+  - fixed various filtering issues, replaced *** with , ... appended to the first entry
+  - time-related drop downs should have months and/or seasons only IN PROGRESS
+
+ # issues: 
+  - editable columns & added plants: tab in/out of the window, undos etc. need attention
+  
+ # improvements:
+  - add upload image functionality
+  - add functionality to allow users to submit their changes and additions to be added to the main db
+  - see if sorting can be reworked to speed it up
+ maybe:
+  - animate the appearance of a photos for gallery
+  - make inner buttons (drop down, upload, delete) into shapes - need a more efficient way
+  - filtering: show unavailable choices but in gray and not selectable
+ # optimization strategies:
+  -- rework the barView buttons by adding a fork function and maybe get rid of jquery
+  -- mobile first
+  -- minimize the use of event handlers
+  -- eliminate unnecessary tags such as <div> and <span>
+  -- minimize the use of document.getElementBy...
+*/
 
 /* #################
    ### IMPORTANT ###
@@ -15,6 +39,18 @@
 // - add data to the table 
 // - call other functions to check local storage for user added plants; 
 // - check session storage for filtered plants and hidden columns
+
+  var table = document.getElementById("plants");
+  var addedRowCounter = []; //used for accessing added plants, a unique number for each
+  var latinNamesAdded = []; //stores the latin names of added plants to avoid storing duplicates
+  //TODO: delete markedPlant?
+//   var markedPlant; //stores the id of plant and of table row that needs to be deleted or modified; 
+  //needs to be a compound ID so it's distinctive
+  var filters = {}; //filters{} is a global var to support filtering multiple columns; 
+  var newRow = null;
+  var arrHeaders = [];
+  window.onload = main();
+
 function main() {
 
   let objNotes = null,
@@ -41,7 +77,7 @@ function main() {
       let k = Object.keys(myObj)[0];
       
       //build the HEADERS row
-      //latin name is the key, common name is 1st value, index 0, notes - 2nd, index 1, etc.
+      //latin name is the key, common name - 1st value index 0, notes - 2nd index 1, etc.
       txt += "<tr title='Click to Sort'>";
       for (let i = 0; i < l; i++) {
         //record column names in a var, replacing html nonbreaking space with js one
@@ -55,11 +91,11 @@ function main() {
           txt += `<th class='colWidth2'>${k}`;
         }
         //the narrowest column headers, colWidth1
-        else if ([2, 3, 4, 5, 6, 7, 10, 11, 14, 15, 19, 22, 28].includes(i)){
+        else if ([2, 3, 4, 5, 6, 7, 10, 11, 14, 15, 19, 22, 28, 29].includes(i)){
           txt += `<th class='colWidth1'>${myObj[k][i]}`;
         }        
         //med size column headers, colWidth2
-        else if ([1, 8, 9, 12, 13, 16, 17, 18, 20, 21, 23, 24, 25, 26, 27, 29].includes(i)){
+        else if ([1, 8, 9, 12, 13, 16, 17, 18, 20, 21, 23, 24, 25, 26, 27].includes(i)){
           txt += `<th class='colWidth2'>${myObj[k][i]}`;
         }
         //headers for all other columns, which there shouldn't be any at this point
@@ -219,6 +255,7 @@ function main() {
         txt += "<img class='btnImg' src='pictures/btnLeafDown.png'></button>"
       txt += "<button id='btnNewPlantClear' class='btnInner' title='Clear this row'>"
         txt += "<img class='btnImg' src='pictures/btnCut.png'></button>"
+//         txt += "<i class='fas fa-cut'></i></button>"
 //       txt += "<button id='btnNewPlantSubmit' class='btnInner' title='Request addition of your plant to the database'>"
 //         txt += "<img class='btnImg' src='pictures/btnShovel.png'></button>"
       txt += "<button id='btnNewPlantAdd' class='btnInner' title='Add your new plant'>"
@@ -254,8 +291,9 @@ function main() {
               filterData();
             }
             else {
-              if (filters[i].length > 1) {
-                table.children[0].children[1].children[i].children[0].value = "***";
+              //if more than filter choice
+              if (Array.isArray(filters[i]) && filters[i].length > 1) {
+                table.children[0].children[1].children[i].children[0].value = filters[i][0] + ", ...";
               } else {
                 table.children[0].children[1].children[i].children[0].value = filters[i][0].toLowerCase();
               }
@@ -319,10 +357,6 @@ function impExp(tgt) {
   
   //cancel button closes the window
   let displayCancelBtn = document.createElement("button");
-//   let imgR = document.createElement("img");
-//   imgR.className = "btnImg";
-//   imgR.src = 'pictures/btnCut.png';
-//   displayCancelBtn.appendChild(imgR);
   displayCancelBtn.innerText = "x";
   displayCancelBtn.className = "expImp btnRight btnInner";
   displayCancelBtn.title = "Click to Close";
@@ -400,8 +434,8 @@ function addStorageFeatures() {
     //display new data buttons optionality
     addPlantInfo[0].style.display = "inline";
     //disable user from editing within new plant's Common Name field, preventing
-    //from deleting buttons etc., only allowing clicking buttons and entering
-    //text within input field, which is a child of Common Name field
+    //them from deleting buttons etc. and only allowing clicking buttons and
+    //entering text within input field, which is a child of Common Name field
     newRow.children[0].contentEditable = false;
     
     //check for user-created plants stored in local storage and append them to the table
@@ -549,14 +583,14 @@ function addToLocal(row, recordNumber) {
   
   //the following array is a list of column names in their original order;
   //it is used so that column names aren't stored with every plant row;
-  //instead, the columns and headers order is matched; removed \xa0 on 9.20.20;
-  let origTblHeaders = ['Latin Name', 'Common Name', 'Notes', 'Action',
-  'Class', 'Height', 'Width', 'Color', 'Leaves', 'Bloom Time',
-  'Fruit Time', 'Sun', 'Roots', 'Quantity In Garden', 'Natural Habitat',
-  'Origin', 'Wildlife', 'Companions', 'Ally', 'Enemy', 'Soil',
-  'When To Plant', 'Days To...', 'How To Prune',
-  'When To Prune', 'Food And Water', 'How To Plant',
-  'When To Feed', 'Propagating', 'Problems', 'Picture'];
+  //instead, the columns and headers order is matched;
+  let origTblHeaders = ['Latin\xa0Name','Common\xa0Name','Notes','Action','Class',
+                        'Height','Width','Color','Leaves','Bloom\xa0Time','Fruit\xa0Time',
+                        'Sun','Roots','Quantity\xa0In\xa0Garden','Natural\xa0Habitat',
+                        'Origin','Wildlife','Companions','Ally','Enemy','Soil',
+                        'When\xa0To\xa0Plant','Days\xa0To...','How\xa0To\xa0Prune',
+                        'When\xa0To\xa0Prune','Food\xa0And\xa0Water','How\xa0To\xa0Plant',
+                        'When\xa0To\xa0Feed','Propagating','Problems','Picture'];
 
   let arrNewPlantVal = [];
   for (let i = 0; i < arrHeaders.length; i++) {
@@ -672,19 +706,22 @@ function addInnerButton(type) {
 //it adds buttons to the common name of a plant whose notes, action
 //or garden loc & qty fields are being modified
 function addBtnUsrChgs(clickedCell) {
-  
+    console.log(`text: ${clickedCell.innerText}, e.type: ${event.type}, key: ${event.key}, code: ${event.keyCode}`);
   // exit, if the user is editing a plant that they've added, text
   // hasn't been entered yet or the cell has just been tabbed into
   if (clickedCell.parentElement.className === "addedRows" 
       || clickedCell.parentElement.id === "newPlantRow"
-      || !(clickedCell.innerText) && event.type != "paste"
-      || [9, 16, 37, 38, 39, 40].includes(event.keyCode)) {
+      //when data is pasted, the cell is blank on key up
+      || !(clickedCell.innerText) && event.type != "paste" //&& event.keyCode != 91 
+      || [9,16,37,38,39,40].includes(event.keyCode)  //tab,shift,left,up,right,down
+//       || event.keyCode === 91 && clickedCell.innerText
+     ) {
     return; 
   }
-    
-  //... if there aren't any children (buttons) in the common name column,
-  //then create a button for saving user changes and include the index
-  //number of the updated column in the button's value
+  
+  //if there aren't any children (buttons) in the common name column,
+  //then create a button for saving user changes and include the 
+  //index number of the updated column in the button's value
   if (clickedCell.parentElement.children[0].childElementCount === 0) {
     let btn = document.createElement("button");
     btn.type = "submit";
@@ -699,7 +736,7 @@ function addBtnUsrChgs(clickedCell) {
   }
   //... if there is already a button in the common name column, then, if not already 
   //included, update the button's value to include the index number of the updated column
-  //or remove the button, if the user has undone all the changes they were typing ???
+  //or remove the button, if the user has deleted or undone all the changes they were typing
   else {
     //the button is in the first column (common name, index 0)
     let btn = clickedCell.parentElement.children[0].children[0];
@@ -884,42 +921,80 @@ function sortTable(colNum) {
       switching = true;
     }
   }
-
 }
 
 //////////////////////////////////////////////////////////////////////
-//this function is called from allClicks() when any cell within filter 
-//row receives a click, tap or entry (keyed, pasted, cut)
-function filterFork(evt) {
-
+//filtering of the height/width columns' min/max range, special case
+function filterBySizeRange(evt) {
+  
   let clickedElt = evt.target;
-  evt.target.className === "btnImg"?clickedElt = evt.target.parentElement:evt.target.className;
-  
-  //the order of event evaluation matters, as the check for text length being zero 
-  //should occur before handling text entries
-  
-  // when the drop down of unique values button is clicked in a cell of filter row
-  if (clickedElt.classList.value === "btnInner btnLeft") {
-    
-    //forCell is a table data cell <td> of the Frozen Filter Row
-    let forCell = clickedElt.parentElement.parentElement.children[0];
-    
-    //if the unique to column values are already populated (there is at least one), remove 
-    //them; otherwise, add them by calling getUnqVals() funciton in the else clause below
-    if (clickedElt.parentElement.getElementsByClassName("dropUnqVals")[0]) {
-      clickedElt.parentElement.removeChild(clickedElt.parentElement.getElementsByClassName("dropUnqVals")[0]);
-      return;
-    } else {
-      getUnqVals(clickedElt.parentElement);
-    }
+  //forCell is a table data cell <td> of the Frozen Filter Row
+  let forCell = clickedElt.parentElement.parentElement.parentElement;
+
+  //create min/max nested entries in filters{} object
+  if (!filters[forCell.cellIndex]) {
+    filters[forCell.cellIndex] = {
+      ">": "",
+      "<": ""
+    };
   }
 
-  // when inside filter field, the delete button is clicked or all of the text is deleted or cut
-  else if (clickedElt.classList.value === "btnInner btnRight"
-           || (evt.keyCode === 8 && clickedElt.value.length === 0) 
-           || (evt.type === "cut" 
-               && (clickedElt.selectionEnd-clickedElt.selectionStart === clickedElt.value.length))) {
+  //add the appropriate min/max value entries in the filter{} object for < and > keys
+  if (clickedElt.className === "inputRangeMin") {
+    filters[forCell.cellIndex][">"] = (clickedElt.value || ((evt.clipboardData || window.clipboardData).getData("text")));
+  } else if (clickedElt.className === "inputRangeMax") {
+    filters[forCell.cellIndex]["<"] = (clickedElt.value || ((evt.clipboardData || window.clipboardData).getData("text")));
+  }
 
+  filterData();
+
+  //create/update the placeholder which is displayed in the filter cell, put blank when no min/max values
+  if (forCell.getElementsByClassName("inputRangeMin")[0].value.length === 0 
+      && forCell.getElementsByClassName("inputRangeMax")[0].value.length === 0) {
+    forCell.children[0].placeholder = "";
+    removeClearingBtn(forCell); //this takes care of sessionStorage too
+  } 
+  else {
+    forCell.children[0].placeholder =
+    forCell.getElementsByClassName("inputRangeMin")[0].value
+    + "-"
+    + forCell.getElementsByClassName("inputRangeMax")[0].value;
+    addClearingBtn(forCell);
+    sessionStorage.filters = JSON.stringify(filters);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+//respomse filtering fields, other than the special min/max range of width/height
+function filterByText(evt){
+  let clickedElt = evt.target;
+  //if a value is typed in a width or height column, clear the placeholder, 
+  //which might've been populated before, from using range feature
+  if (['Width', 'Height'].includes(arrHeaders[clickedElt.parentElement.cellIndex])) {
+    clickedElt.placeholder = "";
+  }
+
+  //if a unique to column values dropdown menu is displayed, remove it
+  if (clickedElt.parentElement.getElementsByClassName("dropUnqVals")[0]) {
+    clickedElt.parentElement.removeChild(clickedElt.parentElement.getElementsByClassName("dropUnqVals")[0]);
+  }
+
+  //create/overwrite an entry in filters object with text typed or pasted    
+  filters[clickedElt.parentElement.cellIndex] = (clickedElt.value || ((evt.clipboardData || window.clipboardData).getData("text"))).toUpperCase();
+
+
+  //filter the table data; the called function uses filters object, so it must be updated first (above)
+  filterData();
+
+  //add the clearing button (scissors) to the filter field
+  sessionStorage.filters=JSON.stringify(filters);
+  addClearingBtn(clickedElt.parentElement);
+}
+
+//////////////////////////////////////////////////////////////////////
+//response to the clicks on the filter clearing buttons
+function clearFilter(clickedElt) {
+  
     let forCell = clickedElt.parentElement;
     let grandpa = forCell.parentElement.parentElement;
     
@@ -952,144 +1027,14 @@ function filterFork(evt) {
     }
     else {
       removeClearingBtn(forCell);
+      forCell.children[0].placeholder = ""
       cleanView();
     }
-    //call filter data to unfilter the table
+    //call filter data with empty parameters to unfilter the table
     filterData();
-    if (forCell.getElementsByClassName("dropUnqVals")[0]) {
-      forCell.removeChild(forCell.getElementsByClassName("dropUnqVals")[0]);
-    }
-  }
-  
-	// when an entry is keyed, pasted or partially cut in min/max range of height/width
-  else if ((evt.type === "keyup" || evt.type === "paste" || evt.type === "cut")
-           && clickedElt.className.toString().includes("inputRange")) {
-    
-    //forCell is a table data cell <td> of the Frozen Filter Row
-    let forCell = clickedElt.parentElement.parentElement.parentElement;
-    
-    //create min/max nested entries in filters{} object
-    if (!filters[forCell.cellIndex]) {
-      filters[forCell.cellIndex] = {
-        ">": "",
-        "<": ""
-      };
-    }
-    
-		//add the appropriate min/max value entries in the filter{} object for < and > keys
-    if (clickedElt.className === "inputRangeMin") {
-      filters[forCell.cellIndex][">"] = (clickedElt.value || ((evt.clipboardData || window.clipboardData).getData("text")));
-    } else if (clickedElt.className === "inputRangeMax") {
-      filters[forCell.cellIndex]["<"] = (clickedElt.value || ((evt.clipboardData || window.clipboardData).getData("text")));
-    }
 
-    filterData();
-    
-    //create the placeholder which is displayed in the filter cell, put blank when no min/max values
-    if (forCell.getElementsByClassName("inputRangeMin")[0].value.length === 0 
-        && forCell.getElementsByClassName("inputRangeMax")[0].value.length === 0) {
-      forCell.children[0].placeholder = "";
-      removeClearingBtn(forCell); //this takes care of sessionStorage too
-    } 
-    else {
-      forCell.children[0].placeholder =
-      forCell.getElementsByClassName("inputRangeMin")[0].value
-      + "-"
-      + forCell.getElementsByClassName("inputRangeMax")[0].value;
-	    addClearingBtn(forCell);
-      sessionStorage.filters = JSON.stringify(filters);
-    }  
-  }
-
-	// when an entry is keyed, pasted or partially cut in filter fields, other than the special min/max range of width/height
-  else  if (evt.type === "keyup" || evt.type === "paste" || evt.type === "cut") {
-    
-    //if a value is typed in a width or height column, clear the placeholder, 
-    //which might've been populated before, from using range feature
-    if (['Width', 'Height'].includes(arrHeaders[clickedElt.parentElement.cellIndex])) {
-      clickedElt.placeholder = "";
-    }
-    
-    //if a unique to column values dropdown menu is displayed, remove it
-    if (clickedElt.parentElement.getElementsByClassName("dropUnqVals")[0]) {
-      clickedElt.parentElement.removeChild(clickedElt.parentElement.getElementsByClassName("dropUnqVals")[0]);
-    }
-    
-    //create/overwrite an entry in filters object with text typed or pasted    
-    filters[clickedElt.parentElement.cellIndex] = (clickedElt.value || ((evt.clipboardData || window.clipboardData).getData("text"))).toUpperCase();
-      
-      
-    //filter the table data; the called function uses filters object, so it must be updated first (above)
-    filterData();
-    
-    //add or remove button for clearing the text in the filter field
-    if (clickedElt.value.length === 0 && evt.type === "keyup") {
-      delete (filters[clickedElt.parentElement.cellIndex]);
-      removeClearingBtn(clickedElt.parentElement);
-    }
-    else {
-	    sessionStorage.filters=JSON.stringify(filters);
-      addClearingBtn(clickedElt.parentElement);
-    }
-  }
-
-	// when one of the values unique to the column is clicked from column's dropped down li
-  // choices, update filters by adding columnNumber:filter pair with an array of selections;
-  else if (clickedElt.className === "customChoice") {
-
-    //forCell is a table data cell <td> of the Frozen Filter Row
-    let forCell = clickedElt.parentElement.parentElement;
-
-    //if there isn't an array entry for this column number in filters, create a blank one
-    //this is done so that the entry can then be searched for a clicked value
-    if (!Array.isArray(filters[forCell.cellIndex])) {
-      filters[forCell.cellIndex] = [];
-    }
-
-    //if the clicked choice is already in filters variable as column number:array of choices, remove
-    //it, change the formatting of the drop down choice back to the original & update sessionStorage
-    if (filters[forCell.cellIndex].includes(event.target.innerText.toUpperCase())) {
-      let i = filters[forCell.cellIndex].indexOf(event.target.innerText.toUpperCase());
-      filters[forCell.cellIndex].splice(i, 1);
-      clickedElt.style.color = "navy";
-      clickedElt.style.backgroundColor = "rgba(204, 255, 153, 0.90)";
-      sessionStorage.filters = JSON.stringify(filters);
-      //if the removed element was the last one in array, remove the emptying button and
-      //delete that whole entry for the object, update sessionStorage
-      if (filters[forCell.cellIndex].length === 0) {
-        removeClearingBtn(forCell);
-      } 
-      //if there is only one selection remaining, updae the filter field to show it instead of ***
-      else if (filters[forCell.cellIndex].length === 1) {
-        forCell.children[0].value = filters[forCell.cellIndex][0].toLowerCase();
-      }
-    }
-		//else, if the selected choice is not in the filters[], add it, do the formatting
-    else {
-      filters[forCell.cellIndex].push(event.target.innerText.toUpperCase());
-      clickedElt.style.color = "rgba(204, 255, 153, 0.90)";
-      clickedElt.style.backgroundColor = "navy";
-    
-      //if one value is selected, display it in the filter field
-      if (filters[forCell.cellIndex].length === 1) {
-        forCell.children[0].value = event.target.innerText;
-        addClearingBtn(forCell);
-        sessionStorage.filters=JSON.stringify(filters);
-      }
-      //if more than one value is selected, display ***
-      else if (filters[forCell.cellIndex].length > 1) {
-        forCell.children[0].value = "***";
-        sessionStorage.filters=JSON.stringify(filters);
-      }
-      //if values are deleted, diplayed that (emptyness)
-      else if (filters[forCell.cellIndex].length === 0) {
-        forCell.children[0].value = event.target.innerText;
-        removeClearingBtn(forCell);
-      }
-    }
-    filterData();
-  }
 }
+
 
 //////////////////////////////////////////////////////////////////////
 //this function is called when a user enters text in the filter (2nd) row
@@ -1098,15 +1043,15 @@ function filterData() {
 
   //get all table rows 
   let tr = table.getElementsByTagName("tr");
-  // loop through all the rows, starting at 3rd row, skipping the headers and search rows
+  // loop through all the rows, starting at 3rd row, skipping the headers and filter rows
   for (let i = 2, len = tr.length - 1; i < len; i++) {
-    // set the showFlag to false, meaning don't show initially
+    // set the showFlag to true, meaning every row is shown initially
     let showFlag = true;
     // loop through the filters object to check all fields where filtering criteria are set
     for (let key in filters) {
       // i is the row, td is the cell, ("td")[key] is column index, key is the column number
       let td = tr[i].getElementsByTagName("td")[key];
-      let cellContents;
+      let cellContents = null;
       // because of the frozenCol class, the common name column's value of the user added plants
       // is inside an input field (child 0), thus has to be accessed through a child's value
       if (key === "1" && td.children.length > 0) {
@@ -1152,9 +1097,23 @@ function filterData() {
           }
         }
       }
+      
+      //when a month drop down choice is a filter criteria
+      if (["Bloom\xa0Time", "Fruit\xa0Time", "When\xa0To\xa0Plant", "When\xa0To\xa0Prune", "When\xa0To\xa0Feed"].
+          includes(arrHeaders[Object.keys(filters)])) {
+        for (k in filters[key]) {
+          if (cellContents.toUpperCase().includes(filters[key][k])) {
+            showFlag = true;
+            break;
+          } else 
+          {
+            showFlag = false;
+          }
+        }
+      }
 
-      //when a drop down choice(s) is selected
-      if (Array.isArray(filters[key])) {
+      //when a drop down choice(s) is a filter criteria
+      else if (Array.isArray(filters[key])) {
         if (!filters[key].includes(cellContents.toUpperCase())) {
           showFlag = false;
           break;
@@ -1181,21 +1140,26 @@ function filterData() {
 
 
 //////////////////////////////////////////////////////////////////////
-// this function pulls unique values from the column it was called and 
-// creates drop-down menu with those values or displays min/max range
-// input fileds; it's triggered by click on btnNewPlantCopy and filterFork
+// this function pulls unique values from the column it was called and creates 
+// drop-down menu with those values or displays min/max range input fileds;
 function getUnqVals(forCell) {
+
+  //hide any drop down menus
   cleanView();
+  
   let dropList = document.createElement("ul");
   dropList.className = "dropUnqVals";
   forCell.appendChild(dropList);
-//   let colName = table.getElementsByTagName("th")[forCell.cellIndex].innerText;
+  
+  //determine the name of the column by pulling its index from arrHeaders
   let colName = arrHeaders[forCell.cellIndex];
+  
   //columns width and height display min and max range input fields instead of unique values
   if (colName === "Height" || colName === "Width") {
     for (let i = 0; i < 2; i++) {
       let liText = document.createElement("li");
       let liInput = document.createElement("input");
+      //there are only two LIs, min and max
       if (i === 0) {
         liText.appendChild(document.createTextNode("Min " + colName + " (inch)"));
         liInput.setAttribute("class", "inputRangeMin");
@@ -1209,13 +1173,44 @@ function getUnqVals(forCell) {
       liText.appendChild(liInput);
       dropList.append(liText);
     }
-  } else {
+  }
+  //columns with time of the year display months instead of unique values
+  else if (["Bloom\xa0Time", "Fruit\xa0Time", "When\xa0To\xa0Plant", "When\xa0To\xa0Prune", "When\xa0To\xa0Feed"].includes(colName)) {
+    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    for (m in months) {
+      let liText = document.createElement("li");
+      liText.setAttribute("class", "customChoice");
+      liText.appendChild(document.createTextNode(months[m]));
+      dropList.appendChild(liText);
+    }
+  }
+  
+  //maybe todo: 
+  
+  //class column should only display each one class, not the filtered variety
+  
+  //color column should only display each one color, not the filtered variety
+  
+  //leaves column should only display each one leaves choice, not the filtered variety
+  
+  //origin column should only display each one origin, not the filtered variety
+  
+  //soil column should only display each one soil type, not the filtered variety
+  
+  //all other columns, not size of plant or time of year
+  else {
     let tr = table.getElementsByTagName("tr");
+    //the array rUnqVals will hold unique values from the given column
     let rUnqVals = [];
     for (let i = 2, l = tr.length - 2; i < l; i++) {
-      //if data is already filtered, display only available choices for another clicked drop down
-      if (tr[i].style.display != "none" || filters[forCell.cellIndex]) {
-        if (tr[i].style.display != "none" && filters[forCell.cellIndex] || tr[i].style.display === "none" && !filters[forCell.cellIndex] ) {
+      //add value to the drop down if it hasn't been hidden (display isn't none) 
+      //OR the clicked column is already used for filtering (its index is in filters)
+      //or if pulling common names to add a new plant
+      if (tr[i].style.display != "none" 
+          || filters[forCell.cellIndex] 
+          || forCell.children[1].id.toString().substr(0,11) === "btnNewPlant") {
+        if (tr[i].style.display != "none" && filters[forCell.cellIndex] 
+            || tr[i].style.display === "none" && !filters[forCell.cellIndex] ) {
           console.log("check filters: function getUnqVals is suspicious");
         }
         let cellValue = tr[i].children[forCell.cellIndex].innerText;
@@ -1225,11 +1220,17 @@ function getUnqVals(forCell) {
         }
       }
     }
+    
+    //sort the drop down values alphabetically
     rUnqVals.sort();
+    
+    //add the drop down values to the UL dropList
     for (let i = 0, l = rUnqVals.length; i < l; i++) {
       let liText = document.createElement("li");
       liText.setAttribute("class", "customChoice");
-      if (filters[forCell.cellIndex]) {
+      //if not pulling common names to add a new plant, format already selected values 
+      if (filters[forCell.cellIndex] 
+          && forCell.children[1].id.toString().substr(0,11) != "btnNewPlant") {
         if (filters[forCell.cellIndex].includes(rUnqVals[i].toUpperCase())) {
           liText.style.color = "rgba(204, 255, 153, 0.90)";
           liText.style.backgroundColor = "navy";
@@ -1242,8 +1243,8 @@ function getUnqVals(forCell) {
 }
 
 //////////////////////////////////////////////////////////////////////
-//this function adds an inner button inside the filter field 
-//for clearing the text inside filter field
+//this function adds an inner button inside the filter field for clearing
+//the text inside filter field & a scissors button for clearing all filters
 function addClearingBtn(toCell) {
   if (!toCell.getElementsByClassName("btnRight")[0]) {
     let delBtn = document.createElement("button");
@@ -1252,6 +1253,7 @@ function addClearingBtn(toCell) {
     delBtn.innerHTML = "<img class='btnImg' src='pictures/btnCut.png'>";
     toCell.appendChild(delBtn);
   }
+  $("#btnClearAllFilters").show();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1266,7 +1268,12 @@ function removeClearingBtn(fromCell) {
     //delete the removed value from filters object
     delete (filters[fromCell.cellIndex]);
     //update the filters object in session storage or remove it if empty
-		Object.keys(filters).length===0?sessionStorage.removeItem("filters"):sessionStorage.filters=JSON.stringify(filters);
+		if (Object.keys(filters).length===0) {
+      sessionStorage.removeItem("filters");
+      $("#btnClearAllFilters").hide();
+    } else {
+      sessionStorage.filters=JSON.stringify(filters);
+    }
   }
 }
 
@@ -1318,35 +1325,31 @@ function displayColumns(tgt) {
       break;
     case "Full":
     default:
-      showColName = null;
+      //for full view, display all columns, thus unhide those that are hidden
+      showColName = sessionStorage.hiddenColumns.split(",");
+      showColName.push('Common\xa0Name');
       break;
     }
   
   //hide/show columns and update session storage, recording hidden
   //columns only, full view (default) is not recorded; not using
   //storeHiddenCol() here, as it's easier to overwrite stored entry
+  for (let i = 0, len = arrHeaders.length; i < len; i++) {
+    if (showColName.includes(arrHeaders[i])) {
+      customColumnDisplay(i, true);
+    } else {
+      customColumnDisplay(i, false);
+    }
+  }
   if (tgt.innerText === "Full") {
     sessionStorage.removeItem("viewName");
     sessionStorage.removeItem("hiddenColumns");
-    //jQuery indexing starts at 1 instead of 0, thus i+1
-    for (let i = 0, len = arrHeaders.length; i < len; i++) {
-      $("td:nth-child(" + (i+1) + "),th:nth-child(" + (i+1) + ")").show();
-    }
     $("#btnCustomCols").hide();
-  } 
-  else {
+  } else {
     //update the view name in session storage
     sessionStorage.viewName = tgt.innerText;
     //capture hidden columns in session storage
     sessionStorage.hiddenColumns = arrHeaders.filter(x=>!showColName.includes(x));
-    //scroll through all columns to hide/format as specified in showColName
-    for (let i = 0, len = arrHeaders.length; i < len; i++) {
-      if (showColName.includes(arrHeaders[i])) {
-        customColumnDisplay(i, true);
-      } else {
-        customColumnDisplay(i, false);
-      }
-    }
     $("#btnCustomCols").show();
   }
 }
@@ -1403,6 +1406,9 @@ function storeHiddenCol(colLiText, hide) {
       }
       if (storedHiddenCols.length===0) {
         sessionStorage.removeItem("hiddenColumns");
+        sessionStorage.removeItem("viewName");
+        document.getElementById("btnView").innerText = "Full";
+        $("#btnCustomCols").hide();
       } 
       else {
         $("#btnCustomCols").show();
@@ -1454,22 +1460,35 @@ function allClicks(e) {
 
   //-- key entries -------------------------------------------------
   if (e.type === "keyup") {
-    //exit if the key clicked is a tab or switching to a window
-    if (e.keyCode === 91) {
+    //exit the function if the key clicked is a tab (9) or changing window tabs (91)
+    //and this is not a ctrl(cmd)+delete(backspace) click(91) in the editable fields
+    if ((e.keyCode === 91 && !["filterInput","inputRangeMin","inputRangeMax"].includes(tgt.className)
+        && !tgt.contentEditable) 
+       || e.keyCode === 9) {
       return;
     }
     //if return (13) or escape (27) keys are clicked
     if ((e.keyCode === 13 && tgt.tagName != "TEXTAREA") || e.keyCode === 27) {
       cleanView();
     }
-    //if alphanumeric text is typed in the filter row
-    else if ((tgt.className === "filterInput"
-             || ["inputRangeMin", "inputRangeMax"].includes(tgt.className))
-//              && (tgt.value.match(/^[a-z0-9\s]+$/i) 
-             && (tgt.value.match(/^.+$/) 
-                 || (e.keyCode === 8 && tgt.value.length === 0))) {
-      filterFork(e);
+    //if alphanumeric text is typed/edited in the filter row
+    else if (tgt.classList.contains("filterInput") && tgt.value.match(/^.+$/)) {
+      filterByText(e);
     }
+    
+    //if alphanumeric text is typed/edited in the min/max ranges of width/height columns
+    else if (tgt.classList.toString().includes("inputRange") && tgt.value.match(/^.+$/)) {
+      filterBySizeRange(e);
+    }  
+    
+    //if text is deleted from filtering fields, including size ranges
+    else if (["filterInput","inputRangeMin","inputRangeMax"].includes(tgt.className)
+      //.. or delete/erase key or ctrl(cmnd)+delete keys are pressed until all the text is erased
+//       || [8,91].includes(e.keyCode) && tgt.value.length === 0
+             && tgt.value.length === 0) {
+      clearFilter(tgt);
+    }
+    
     //if text is typed within new plant row
     else if (tgt.id === "newPlantRow"
             || (tgt.contentEditable === "true" && tgt.parentElement.parentElement.id === "newPlantRow")) {
@@ -1480,7 +1499,7 @@ function allClicks(e) {
     }
     
     //if changes are made to Notes, Action, or Quantity in Garden columns
-    else if (["Notes", "Action", "Quantity In Garden"].includes(arrHeaders[tgt.cellIndex])) {
+    else if (["Notes", "Action", "Quantity\xa0In\xa0Garden"].includes(arrHeaders[tgt.cellIndex])) {
       addBtnUsrChgs(tgt);
     }
     
@@ -1510,13 +1529,17 @@ function allClicks(e) {
       return;
     }
     //alphanumeric text is pasted into filter row
-    else if ((tgt.className === "filterInput"
-             || ["inputRangeMin", "inputRangeMax"].includes(tgt.className))
+    else if (tgt.className === "filterInput"
              && (e.clipboardData || window.clipboardData).getData("text").match(/^.+$/)) {
-      filterFork(e);
+      filterByText(e);
     }
-    //if data is pasted into Notes, Action, or Quantity in Garden columns
-    else if (["Notes", "Action", "Quantity In Garden"].includes(arrHeaders[tgt.cellIndex])) {
+    //alphanumeric text is pasted into filtering min/max size ranges
+    else if (["inputRangeMin", "inputRangeMax"].includes(tgt.className)
+             && (e.clipboardData || window.clipboardData).getData("text").match(/^.+$/)) {
+      filterBySizeRange(e);
+    }
+    //if data is pasted into editable Notes, Action, or Quantity in Garden columns (not filter)
+    else if (["Notes", "Action", "Quantity\xa0In\xa0Garden"].includes(arrHeaders[tgt.cellIndex])) {
       addBtnUsrChgs(tgt);
     }
     //if data is pasted into import window
@@ -1536,18 +1559,26 @@ function allClicks(e) {
   
   //-- data is cut -------------------------------------------------
   else if (e.type === "cut") {
-    //alphanumeric text is cut from a filter field
-    if ((tgt.className === "filterInput"
+    //alphanumeric text is cut/edited in a filter field
+    if (tgt.className === "filterInput" && tgt.value.match(/^.+$/)) {
+      filterByText(e);
+    }
+    //alphanumeric text is cut/edited in a filter field min/max size ranges
+    else if (["inputRangeMin", "inputRangeMax"].includes(tgt.className) && tgt.value.match(/^.+$/)) {
+      filterBySizeRange(e);
+    }
+    //all text is cut from a filter field, including size ranges
+    else if ((tgt.className === "filterInput"
          || ["inputRangeMin", "inputRangeMax"].includes(tgt.className)) 
-      && tgt.value.match(/^.+$/)) {
-      filterFork(e);
+      && tgt.value.length === 0) {
+      clearFilter(tgt);
     }
     //handle data cut from exp/imp window
     else if (tgt.classList.contains("imp") && tgt.tagName === "TEXTAREA") {
       tgt.parentElement.children[2].style.display = "none";
     }
     //if changes are made to Notes, Action, or Quantity in Garden columns
-    else if (["Notes", "Action", "Quantity In Garden"].includes(arrHeaders[tgt.cellIndex])) {
+    else if (["Notes", "Action", "Quantity\xa0In\xa0Garden"].includes(arrHeaders[tgt.cellIndex])) {
       addBtnUsrChgs(tgt);
     }
     else return;
@@ -1570,7 +1601,8 @@ function allClicks(e) {
     //btnView is clicked: scroll through views if it's a single click, show menu for a double click
     else if (tgt.className === "fa fa-fw fa-cog" && tgt.parentElement.id === "btnView"
        || tgt.id === "btnView") {
-          displayColumns(tgt);
+      cleanView();  
+      displayColumns(tgt);
     }
         
     //a click on a table header's eye icon
@@ -1603,8 +1635,6 @@ function allClicks(e) {
       if (expImpButton[1]) {
         expImpButton[1].parentElement.parentElement.removeChild(expImpButton[1].parentElement);
       }
-
-
     }
     
     //when one of the Export/Import drop down choices is clicked
@@ -1678,26 +1708,99 @@ function allClicks(e) {
       document.body.removeChild(tgt.parentElement);
     }
 
-    //if column header is clicked, sort the table using the clicked column as key
+    //click on column header, sort the table using the clicked column as key
     else if (tgt.tagName === "TH") {
       sortTable(e.target.cellIndex);
     }
     
-    //click on filtering drop down buttons: unique values or clear filters
+    //click on filtering drop down leaf
     else if (["frozenFilterRow", "filterFreeze"].includes(tgt.parentElement.className)
-               && (tgt.classList.value === "btnInner btnLeft" 
-                   || tgt.classList.value === "btnInner btnRight")
-               || (tgt.parentElement.parentElement
-                   && ["frozenFilterRow", "filterFreeze"].includes(tgt.parentElement.parentElement.className)
-                   && tgt.className === "customChoice")
-              )
-    {
-      filterFork(e);
+               && tgt.classList.value === "btnInner btnLeft") {
+      //if the unique to column values are already populated (there is at least one), remove 
+      //them; otherwise, add them by calling getUnqVals() funciton in the else clause below
+      if (tgt.parentElement.getElementsByClassName("dropUnqVals")[0]) {
+        tgt.parentElement.removeChild(tgt.parentElement.getElementsByClassName("dropUnqVals")[0]);
+        return;
+      } else {
+        getUnqVals(tgt.parentElement);
+      }
     }
+    
+    //click on one of the leaf's filtering drop down choices
+    else if (tgt.parentElement.parentElement
+             && ["frozenFilterRow", "filterFreeze"].includes(tgt.parentElement.parentElement.className)
+             && tgt.className === "customChoice") {
 
-    //click on filtering of height of width range cells
-    else if (["inputRangeMin", "inputRangeMax"].includes(tgt.className)) {
-      return;
+      //forCell is a table data cell <td> of the Frozen Filter Row
+      let forCell = tgt.parentElement.parentElement;
+
+      //if there isn't an array entry for this column number in filters, create a blank one;
+      //this is done so that the entry can then be searched for a clicked value
+      if (!Array.isArray(filters[forCell.cellIndex])) {
+        filters[forCell.cellIndex] = [];
+      }
+
+      //if the clicked choice is already in filters variable as column number:array of choices, remove
+      //it, change the formatting of the drop down choice back to the original & update sessionStorage
+      if (filters[forCell.cellIndex].includes(event.target.innerText.toUpperCase())) {
+        let i = filters[forCell.cellIndex].indexOf(event.target.innerText.toUpperCase());
+        filters[forCell.cellIndex].splice(i, 1);
+        tgt.style.color = "navy";
+        tgt.style.backgroundColor = "rgba(204, 255, 153, 0.90)";
+        sessionStorage.filters = JSON.stringify(filters);
+        //if the removed element was the last one in array, remove the emptying button and
+        //delete that whole entry for the object, update sessionStorage
+        if (filters[forCell.cellIndex].length === 0) {
+          removeClearingBtn(forCell);
+        } 
+        //if there is only one selection remaining, updae the filter field to show it instead of ***
+        else if (filters[forCell.cellIndex].length === 1) {
+          forCell.children[0].value = filters[forCell.cellIndex][0].toLowerCase();
+        }
+      }
+      //else, if the selected choice is not in the filters[], add it, do the formatting
+      else {
+        filters[forCell.cellIndex].push(event.target.innerText.toUpperCase());
+        tgt.style.color = "rgba(204, 255, 153, 0.90)";
+        tgt.style.backgroundColor = "navy";
+
+        //if one value is selected, display it in the filter field
+        if (filters[forCell.cellIndex].length === 1) {
+          forCell.children[0].value = event.target.innerText;
+          addClearingBtn(forCell);
+          sessionStorage.filters=JSON.stringify(filters);
+        }
+        //if more than one value is selected, add a comma and ellipsis
+        else if (filters[forCell.cellIndex].length === 2) {
+          forCell.children[0].value += ", ...";
+          sessionStorage.filters=JSON.stringify(filters);
+        }
+        //if values are deleted, diplayed that (emptyness)
+        else if (filters[forCell.cellIndex].length === 0) {
+          forCell.children[0].value = event.target.innerText;
+          removeClearingBtn(forCell);
+        }
+      }
+      filterData();
+      
+    }
+    
+    //click on filter-clearing scissors
+    else if (["frozenFilterRow", "filterFreeze"].includes(tgt.parentElement.className)
+               && tgt.classList.value === "btnInner btnRight") {
+      clearFilter(tgt);
+    }
+    
+    //click on clear all filters button, upper scissors
+    else if (tgt.id === "btnClearAllFilters") {
+      //hide the scissors button
+      tgt.display = "none";
+      //scroll through the keys of the filters variable and clear each
+      //going for table's first child(body) then second (filters row) then column(key)
+      for (key in filters) {
+        clearFilter(table.children[0].children[1].children[key].getElementsByClassName("btnRight")[0]);
+      }
+      filters = {};
     }
 
     //buttons for user to add a plant
@@ -1776,7 +1879,9 @@ function allClicks(e) {
     else {
       //if a click is not on one of export/import or new plant's update/cancel buttons
       if (!(["expImp", "btnInner"].map(i => {return tgt.classList.contains(i)}).reduce((a,b)=> a+b) 
-            && ["btnRight","btnLeft"].map(i => {return tgt.classList.contains(i)}).reduce((a,b)=> a+b))) {
+            && ["btnRight","btnLeft"].map(i => {return tgt.classList.contains(i)}).reduce((a,b)=> a+b)
+            || tgt.classList.toString().includes("inputRange")
+            || (tgt.children[0] && tgt.children[0].classList.toString().includes("inputRange")))) {
         cleanView();
       }
     }
