@@ -98,15 +98,14 @@ button {
   cursor: pointer;
 }
 
-/* h1 syting is applied to the name of the page in the nav bar */
+/* h1 styling is applied to the name of the page in the nav bar */
 /* mobile, see @media for desktop */
 h1 {
   font-size: 150%;
   z-index: 5;
-  position: absolute;
-  width: 10em;
-  margin: 0.25em 30%;
-  text-align: center;
+  position: fixed;
+  width: 50%;
+  margin: 0.25em 25%;
   color: #ffffcc;
 /* don't allow selection, so that user can drag objects on visual tab without selecting the title */
   -webkit-user-select: none; /* Safari */        
@@ -117,7 +116,8 @@ h1 {
 
 @media only screen and (min-width: 768px) {
   h1 {
-    margin: 0.25em 45%;
+    width: 30%;
+    margin: 0.25em 35%;
   }
 }
 
@@ -148,11 +148,14 @@ h1 {
 /* The navigation bar is fixed on the page, doesn't move with scrolling;
    it has a changing background (coloranima); a background color is 
    specified, in case animation doesn't work. */
-/* z-index 4 puts nav bar behind view buttons and in front of everything else.*/
 .navbar {
+/* z-index 4 puts nav bar behind view buttons and in front of everything else.*/
   z-index: 4;
   position: fixed;
   width: 100%;
+  display: inline-block;
+  text-align: center;
+  padding: 0;
   border:  1pt outset #99ccff;
   -webkit-animation-name: coloranima;
   -webkit-animation-duration: 150s;
