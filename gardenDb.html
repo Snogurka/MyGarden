@@ -1,6 +1,11 @@
 <!DOCTYPE html>
-<!-- v.7.2 -->
+<!-- v.7.3 -->
 <!-- changes: 
+  -- btnView allow click-scrolling through views
+  -- custom view is a separate eye button now
+  -- import/export data is a separate I/E button now
+  -- columns have an eye to hide them
+  -- added a scissors button to navbar to clear all filters at once
 -->
 <html lang="en-US">
   <head profile="http://www.w3.org/2005/10/profile">
@@ -18,7 +23,6 @@
     <meta name="keywords" content="garden, gardening, design, local, plants">
     <meta name="author" content="Anna Stafford">
     <meta charset="utf-8"/>
-    
 <!--     Research setting , maximum-scale=1.0"> below; it prevents users from resizing the document per w3.org -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
@@ -28,8 +32,10 @@
 <!--     To use font awesome 5, download their library or create and account and update the code referenced below -->
 <!--     <script src="https://kit.fontawesome.com/a076d05399.js"></script> -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="js/dbCode.js"></script>
+    <script src="js/dbCode.js" defer></script>
+
     <noscript>JavaScript must be enabled to fully use the webpage</noscript>
+    
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/db.css">
   </head>
@@ -48,6 +54,9 @@
       <i id="btnCustomCols" title="Column Choices for a Custom View" class="fas fa-eye">
         <ul id="dropColNames"></ul>
       </i>
+      <i id="btnClearAllFilters" title="Clear All Filters">
+        <img class='btnImg' src='pictures/btnCut.png'>
+      </i>
 <!--       <button type="button" id="btnUploadPictures" onClick="()">Upload</button> -->
 <!--       <button type="button" id="btnSubmitPlant" onClick="()">Submit</button> -->
 <!--         <a href="gardenEdi.html"><i title="Edible" class="fa fa-fw fa-cutlery"></i></a> -->
@@ -57,7 +66,7 @@
     <!--     the language version below is currently hidden -->
         <a href="gardenRu.html" id="btnRu">Ru</a>
     </div>
-    
+
     <div id="picGal" class="wrapper">
 <!--       in the line below, the value of the image is set to 1 - this creates a value 
       attribute that's then used in js to capture the total number of images available -->
@@ -87,17 +96,5 @@
     <button id="btnDn" title="To the Bottom">Down</button>
     <button id="btnUp" title="To the Top">Up</button>
 
-    <script async>
-  // The global variables, declared below, are here as otherwise the
-  //   script tries to use them before the entire DOM Is available
-      var table = document.getElementsByTagName("TABLE")[0];
-      var addedRowCounter = []; //used for accessing added plants, a unique number for each
-      var latinNamesAdded = []; //stores the latin names of added plants to avoid storing duplicates
-      var markedPlant; //stores the id of plant and of table row that needs to be deleted or modified; needs to be a compound ID so it's distinctive 
-      var filters = {}; //filters{} is a global var to support filtering multiple columns; 
-      var newRow = null;
-      var arrHeaders = [];
-      window.onload = main();//only one onload is allowed
-     </script>
-    </body>
+  </body>
 </html>
