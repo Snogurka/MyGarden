@@ -1,4 +1,4 @@
- /********** v.7.2 **********/
+ /********** v.7.3 **********/
 /*to prevent zoom in safari and chrome, font-size has to be at least 16*/
 /********** database page styles **********/
 
@@ -12,6 +12,13 @@
 
 #btnCustomCols {
   background: radial-gradient(#ffffcc 30%, rgba(255,255,255,0) 70%);
+  display: none;
+}
+
+#btnClearAllFilters {
+  height: 2px;
+  width: 2px;
+  margin: 0;
   display: none;
 }
 
@@ -65,30 +72,16 @@
   left: 50%;
 }
 
-  /* UP AND DOWN SPEEDY BUTTONS */
-#btnDn, #btnUp {
-  position: fixed;
-  border:   none;
-  right:    15px;
-  width:    3em;
-  height:   3em;
-  opacity:  0.3;
-  z-index:  11;  
-}
-
-#btnDn { /*this button shows up on scroll to take the user to the top*/
-  bottom: 10px;
-}
-#btnUp { /*this button shows up on scroll to take the user to the top*/
-  top: 90px;
-}
-#btnUp:hover, #btnDn:hover {
-  opacity: 0.7;
-}
-
 .btnUpdatePlant { /*button for recording changes within notes, action, quantity*/
   top: 0;
   background: rgba(178, 246, 23, 0.5);
+}
+
+.colWidth1 {
+  width: 8em;
+}
+.colWidth2 {
+  width: 12em;
 }
 
 /* EXPORT/IMPORT WINDOW */
@@ -167,7 +160,7 @@ div.expImp > textarea {
 .frozenFilterRow {
   position: sticky;
   position: -webkit-sticky;
-  top: 3.55em;
+  top: 4.2em;
   background-color: rgba(0, 0, 128, 1);
   z-index: 2;
 }
@@ -175,7 +168,7 @@ div.expImp > textarea {
 .filterFreeze {
   position: sticky;
   position: -webkit-sticky;
-  top: 3.55em;
+  top: 4.2em;
   left: 0;
   text-align: left;
   background-color: rgba(0, 0, 128, 1); /*opaque navy*/
@@ -191,6 +184,10 @@ div.expImp > textarea {
   background-color: rgba(0, 0, 128, 1);
 }
 
+i:hover {
+  cursor: pointer;
+}
+
 /* IMAGES - SETTINGS FOR THE LAST COLUMN, ALL THE WAY TO THE RIGHT */
 img {
   width: 4em;
@@ -201,7 +198,7 @@ img {
 .inputRangeMin, .inputRangeMax {
   max-width: 3em;
   max-height: 1.2em;
-  margin: 0 1;
+  margin-right: 5px;
   text-align: right;
   position: absolute;
   right: 0;
@@ -242,7 +239,7 @@ img {
 #plants {
   table-layout: fixed;
   position: relative;
-  top: 1.8em;
+  top: 2.5em;
   width: 100%;
   height: 50%;
   border-collapse: collapse;
@@ -260,7 +257,7 @@ img {
 #plants th {
   position: sticky;
   position: -webkit-sticky;
-  top: 1.8em;
+  top: 2.5em;
   padding: 4px 10px 4px 4px;
   text-align: left;
   color:#ffffcc;
@@ -278,13 +275,6 @@ img {
   background-color: rgba(208, 218, 225, 0.5);
 }
 
-.colWidth1 {
-  width: 8em;
-}
-.colWidth2 {
-  width: 12em;
-}
-
 /* 
   Responsiveness for desktop and tablet, width greater than 768px
   600 for small devices; 400 for phones, with mobile first - the default
@@ -294,7 +284,7 @@ img {
 /*     font-size: 90%; */
   }
   img {
-    width: 7em;
+    width: 4em;
     max-height: auto;
   }
   .colWidth1 {
