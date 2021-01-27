@@ -6,7 +6,24 @@
   - fixed - mobile plants move too fast
   - improved garden name change support
   - size/sun options should toggle starting on 1st click, not 2nd
-  - sun/soil through linear gradients
+  
+  - as an option in toolbox, show a button to populate the garden with the plants placed in that named garden 
+  
+  - garden should be a cute picture of itself with photos?
+  - plant should have an option to show up as a photo or text name
+
+  *** NEW ***
+ - new: code for plant being moved in/out of a garden: 
+    - the plant needs to "show" that it's being moved in/out of garden
+    - the plants should not be hidden onClick of a garden
+    - maybe sun shouldn't be hidden either?
+    - add boundaries to stop plant/garden off the screen
+    - gardens need to be smaller on mobile
+    - add season simulation: pick a month -> color what's in bloom
+
+ - maybe add optionality to copy plant/garden
+ - maybe a drawing of a digging lines on a click in the blue area 
+ - research: ontouchstart etc and ondblclick are not allowed for SVG (in html)?
 */
 
 
@@ -26,13 +43,14 @@ var svgPlace = null;
 //this function is called on window load and loads existing garden design from user's local storage
 function myMain(){
   svgPlace = document.getElementById("svgArea");
-  svgPlace.setAttributeNS(null, "width", window.screen.width);
-  svgPlace.setAttributeNS(null, "height", window.screen.height);
+  let size = 2;
+  svgPlace.setAttributeNS(null, "width", window.screen.width*size);
+  svgPlace.setAttributeNS(null, "height", window.screen.height*size);
   svgPlace.viewBox.baseVal.x = 0;
-  svgPlace.viewBox.baseVal.y = 0;
-  svgPlace.viewBox.baseVal.width = window.screen.width;
-  svgPlace.viewBox.baseVal.height = window.screen.height;
-
+  svgPlace.viewBox.baseVal.y = 0;  
+  svgPlace.viewBox.baseVal.width = window.screen.width * size;
+  svgPlace.viewBox.baseVal.height = window.screen.height * size;
+  
   // munit = my unit, the font size, if set to 14, munit is ~7.11
   munit = Math.round((Number(window.getComputedStyle(svgPlace, null).getPropertyValue("font-size").replace("px",""))/1.9 + Number.EPSILON) * 100) / 100;  
   
@@ -43,8 +61,7 @@ function myMain(){
   
   let sunColors = {"Full":["#ffe922", "50%"], "Part":["#ddcc38", "30%"], "Shade":["#bfba71", "30%"]};
   let soilColors = {"Acidic":"rgb(160, 195, 68)", "Neutral":"rgb(166, 146, 62)", "Alkaline":"rgb(4, 56, 111)"};
-//   "Acidic":"rgb(137, 214, 60)"
-  
+
   for (sun in sunColors) {
     for (soil in soilColors) {
       addLineGrad (sun + "_" + soil, [
@@ -56,7 +73,7 @@ function myMain(){
     }
   }
   
-  //check is localStorage is available and load the existing design, if there is one
+  //check if localStorage is available and load the existing design, if there is one
   if(checkLocalStorage()){
     loadExistingDesign();
   }
@@ -629,19 +646,18 @@ function sizersDisplay(eltGrp, displayVal) {
 //planting area/garden, and set its sun availability.
 function addGarden(elt){
   
+  //keeping the color of all text fields in the garden the same, grey
   let gardenTextColor = "rgba(101, 105, 70, 0.75)";
   //var to capture widths of sun & tools gears, used for name centering
   let widthOfSunToolsGear = 0;
-
   //to indicate that a NEW planting area is created as opposed to an existing   
   //one being loaded from local storage, the supplied id for it is set to null
   let oldGarden = true; //this is used to hide sun, tools, resize on reload;
   
+  //if there is no garden id, a new garden is being created
   if (!elt.gId) {
     oldGarden = false;
-    //setting SUN value for a new garden to a sun icon
-//     elt.sn = "\uf185";
-    //when creating a NEW garden area, as opposed to loading an existing one, create and record 
+    //when creating a NEW garden, as opposed to loading an existing one, create and record 
     //the new garden id: 1 for the first one or the stored garden counter grdnCntr plus one.
     if (!localStorage.aas_myGardenVs_grdns) {
       elt.gId = 1;
@@ -672,12 +688,12 @@ function addGarden(elt){
   //the planting area (garden) rectangle
   grp.appendChild(makeRect(elt));
   
-  //the following creates a sun drop down button using supplied text value, stored
-  //in sun varianble for an existing garden and sun icon "\uf185" for a new garden
+  //create a sun drop down button using supplied text value, stored in
+  //sn var for an existing garden and sun icon "\uf185" for a new garden
   let gardenElt = makeText({
     x:elt.x+munit*0.5, 
     y:elt.y+munit*2, 
-    cls:"fauxUl ulSun", //this order has to remain the same, otherwise use Array.from(group.classList).findIndex(x=>x.includes("li")) when retrieving ulSun
+    cls:"fauxUl ulSun",
     clr:gardenTextColor, 
     txt:elt.sn+" \uf0d7"});
   grp.appendChild(gardenElt);
@@ -698,16 +714,27 @@ function addGarden(elt){
   
   //the following creates "Garden Name" editable text element using supplied value 
   //for existing and "New Garden" for new
-  gardenElt = makeEditableText({
-    x:elt.x, //parent's x arg is used so that name can be centered
-    y:elt.y, //the y arg is adjusted within called function, if garden is too small
-    w:elt.w, //parent's width, so that centering can be done 
+  //for y-value, check if there is enough room: 
+  //width of parent minus approximate width of sun and tools gears, from elt.desc, 
+  //compared to number of characters in the garden name multiplied by munit (7.37) 
+  //(approximate size of a letter); if not enough room, y is adjusted so that the 
+  //garden name is placed above the garden
+  let nmY = elt.y+munit*2;
+  if (elt.w * sizeAdj - widthOfSunToolsGear < elt.nm.length * munit) {
+    nmY = elt.y;
+  }
+  
+  gardenElt = makeText({
+    //centering the garden name, using parent's x and w less 
+    //half of garden name width, set below to 200 (200/2=100)
+    x:(elt.x + elt.w*sizeAdj/2 - elt.nm.length*munit/2),
+    y:nmY,
     clr:gardenTextColor,
     desc:widthOfSunToolsGear,
-//     clr:"rgba(250, 250, 250, 0.5)", 
     cls:"editable", 
     txt:elt.nm});
   gardenElt.setAttributeNS(null, "contentEditable", "true");
+  
   grp.appendChild(gardenElt);
   
   //create the soil indicator - drop up
@@ -729,7 +756,7 @@ function addGarden(elt){
   //height
   gardenElt = makeText({
     x:elt.x + Number(grp.children[0].getAttributeNS(null, "width")),
-    y:elt.y + Number(grp.children[0].getAttributeNS(null, "height"))-munit*3,
+    y:elt.y + Number(grp.children[0].getAttributeNS(null, "height"))/2,
     cls:"sizeInd", 
     clr:gardenTextColor, 
     txt:formatSizeDisplay(elt.h)
@@ -739,7 +766,7 @@ function addGarden(elt){
 
   //width
   gardenElt = makeText({
-    x:elt.x+Number(grp.children[0].getAttributeNS(null, "width"))-munit*5,
+    x:elt.x+Number(grp.children[0].getAttributeNS(null, "width"))/2,
     y:elt.y+Number(grp.children[0].getAttributeNS(null, "height"))+munit*1.3, 
     cls:"sizeInd", 
     clr:gardenTextColor, 
@@ -787,21 +814,22 @@ function gardenFork(clkdElt) {
       //the choices are used by sunChoice() thus are case-sensitive
       fauxUIDropDown(clkdElt, ["Full", "Part", "Shade"]);
     }
+    else if (clkdElt.classList.contains("ulSoil")) {
+      fauxUIDropDown(clkdElt, ["Acidic", "Neutral", "Alkaline"], -1);
+    }
     else if (clkdElt.classList.contains("ulTools")) {
-      let choices = [];
+      let choices = ["Clean this garden", "Duplicate this garden"];
       if (clkdElt.parentElement.getElementsByClassName("editable")[0].textContent != "New Garden") {
         choices.push("Pull plants for this garden from db");
       }
       if (clkdElt.parentElement.getElementsByClassName("plant").length) {
         choices.push("Pull compations for this plant");
       }
-      if ("A") {
+      if (clkdElt.parentElement.getElementsByClassName("ulSun")[0].textContent.split(" ")[0]!="\uf185" &&
+          clkdElt.parentElement.getElementsByClassName("ulSoil")[0].textContent.split(" ")[0]!="Soil") {
         choices.push("Pull plants for this sun & soil");
       }
       fauxUIDropDown(clkdElt, choices);
-    }
-    else if (clkdElt.classList.contains("ulSoil")) {
-      fauxUIDropDown(clkdElt, ["Acidic", "Neutral", "Alkaline"], -1);
     }
   }
   
@@ -1141,9 +1169,7 @@ function makeRect(specs) {
 //this function creates an SVG text, using x, y, class name, text and event (optional) supplied
 function makeText(elt) {
   let txtElem = document.createElementNS(xmlns, "text");
-  if (elt.desc){
-    txtElem.setAttributeNS(null, "desc", elt.desc);
-  }
+  if (elt.desc){txtElem.setAttributeNS(null, "desc", elt.desc);}
   txtElem.setAttributeNS(null, "fill", elt.clr);
   txtElem.setAttributeNS(null, "x", elt.x);
   txtElem.setAttributeNS(null, "y", elt.y);
@@ -1160,35 +1186,38 @@ function makeText(elt) {
 // to determine if the garden is too small for the name to fit inside, name's
 // width is subtracted from garden width less the widths of sun & tools gears
 // the combined width of sun & tools gears is supplied and provided in desc
-function makeEditableText(elt) {
-  let txtElt = document.createElementNS(xmlns, "foreignObject");
-  if (elt.desc){txtElt.setAttributeNS(null, "desc", elt.desc);}
-  txtElt.setAttributeNS(null, "color", elt.clr);
-  //centering the garden name, using parent's x and w less 
-  //half the width of garden name set below to 20 (200/2=100)
-  txtElt.setAttributeNS(null, "x", elt.x + elt.w * sizeAdj / 2 - 100);
+// function makeEditableText(elt) {
+//   let txtElt = document.createElementNS(xmlns, "foreignObject");
+//   txtElt.contentEditable = "true";
+//   if (elt.desc){txtElt.setAttributeNS(null, "desc", elt.desc);}
+//   txtElt.setAttributeNS(null, "color", elt.clr);
+//   //centering the garden name, using parent's x and w less 
+//   //half the width of garden name set below to 20 (200/2=100)
+//   txtElt.setAttributeNS(null, "x", elt.x + elt.w * sizeAdj / 2 - 100);
 
-  //check if enough room: width of parent minus approximate width of sun and tools gears, from elt.desc, 
-  //compared to number of characters in the garden name multiplied by munit (7.37) (approximate size of a letter)
-  //if not enough room, y is adjusted so that the garden name is placed above the garden
-  if (elt.w * sizeAdj - elt.desc < elt.txt.length * munit) {
-    txtElt.setAttributeNS(null, "y", elt.y - munit*2);
-  } else {
-    txtElt.setAttributeNS(null, "y", elt.y);
-  }
+//   //check if enough room: width of parent minus approximate width of sun and tools gears, from elt.desc, 
+//   //compared to number of characters in the garden name multiplied by munit (7.37) (approximate size of a letter)
+//   //if not enough room, y is adjusted so that the garden name is placed above the garden
+//   if (elt.w * sizeAdj - elt.desc < elt.txt.length * munit) {
+//     txtElt.setAttributeNS(null, "y", elt.y - munit*2);
+//   } else {
+//     txtElt.setAttributeNS(null, "y", elt.y);
+//   }
   
-  txtElt.setAttributeNS(null, "width", 200);
-  txtElt.setAttributeNS(null, "height", 25);
-  let inpt = document.createElement("input");
-  //the xml div is for IE
-  let inDiv = document.createElement("div");
-  inDiv.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-  inDiv.appendChild(inpt);
-  txtElt.setAttributeNS(null, "class", elt.cls);
-  let txtVal = document.createTextNode(elt.txt);
-  txtElt.appendChild(txtVal);
-  return txtElt;
-}
+//   txtElt.setAttributeNS(null, "width", 200);
+//   txtElt.setAttributeNS(null, "height", 25);
+//   let inpt = document.createElement("input");
+//   //the xml div is for IE
+//   let inDiv = document.createElement("div");
+//   inDiv.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+//   inDiv.appendChild(inpt);
+//   inDiv.contentEditable = "true";
+//   txtElt.setAttributeNS(null, "class", elt.cls);
+//   let txtVal = document.createTextNode(elt.txt);
+//   txtElt.appendChild(txtVal);
+//   txtVal.contentEditable = "true";
+//   return txtElt;
+// }
 
 //////////////////////////////////////////////////////////////////////
 //this function adds a picture
@@ -1370,6 +1399,15 @@ var transform = null; //item 0 of clickedElement's transform, baseVal
 var resize = false;   
 var moving = false;
 var clickPos = {}; //stores cursor location upon first click
+var nameChangeId = null; 
+var clickType = null; //needed for mobile, to prevent both mouse and touch response, where only one is needed
+//responses covered
+// - on garden - toggle sun, size, soil, tools; dbl - will not go through due to preventDefault
+// - on plant - ??? hide dropdowns ???, same as above ??? 
+// - on svg - hide dropdowns; dbl - bring up add/delete plant/garden menu
+// - on name - edit name; dbl - edit name;
+// - on drop down UL - toggle drop down UL, same for dbl
+// - on LI choice - perform the chosen action, hide shown dropdown
 
 //////////////////////////////////////////////////////////////////////////////////////
 //getMousePosition() returns the coordinates in SVG space, defined by the viewBox 
@@ -1385,8 +1423,10 @@ function getMousePosition(evt) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-//triggered by mouse or finger down, linked in html
+//triggered by mouse or finger down on svg; 
 function touchDown(evt) {
+  
+  console.log(evt.type);
   
   //the some() method executes the callback function once for each element in
   //the array until it finds the one where the call back returns a true value
@@ -1421,14 +1461,22 @@ function touchDown(evt) {
       translate.setTranslate(0, 0);
       clickedElement.transform.baseVal.insertItemBefore(translate, 0);
     }
-    //get initial translation amount (item 0 is translate, as ensured above)
+    //get initial translation amount (item 0 is translate, as set above)
     transform = transforms.getItem(0);
     offset.x -= transform.matrix.e;
     offset.y -= transform.matrix.f; 
-  } 
-  //if a click isn't on classes specified above or the faux Ul, hide all shown menus
+  }
+  
+  //hide all shown menus, unless a click is on classes specified above or the faux Ul
   else if(!evt.target.classList.toString().includes("faux")){
+    
     hideDropDown();
+    
+//     if (evt.target.classList.toString().includes("editable")) {
+//       evt.target.style.fontStyle = "italic";
+//       evt.target.setAttributeNS(null, "color", "blue");
+//       console.log("editing the name");
+//     }
   }
   
   //detecting a plant being moved into the garden
@@ -1441,8 +1489,11 @@ function touchDown(evt) {
 //when an element is resized, its size is adjusted by the change in mouse/finger position
 //when an element is moved, its position is set to the mouse/finger position, adjusted by svg matrix
 function dragging(evt) {
-
+  
   if (clickedElement) {
+    
+    console.log(evt.type);
+    
     evt.preventDefault();
     coord = getMousePosition(evt);
 
@@ -1508,13 +1559,13 @@ function dragging(evt) {
         gName.setAttributeNS(null, "x", 
                              Number(rect.getAttributeNS(null, "x")) +
                              Number(rect.getAttributeNS(null, "width"))/2 -
-                             Number(gName.getAttributeNS(null, "width"))/2);
+                             gName.textContent.length*munit/2);
         //check if enough room: new width newW minus the widths of sun and tools gears, from gName.desc, 
         //compared to number of characters in the garden name times munit/2 (approximate size of a letter, ~7.11)
-        if ((newW - Number(gName.getAttributeNS(null, "desc"))) < (gName.innerHTML.length+3) * munit) {
-          gName.setAttributeNS(null, "y", Number(rect.getAttributeNS(null, "y"))-munit*2);
-        } else {
+        if ((newW - Number(gName.getAttributeNS(null, "desc"))) < gName.textContent.length*munit) {
           gName.setAttributeNS(null, "y", Number(rect.getAttributeNS(null, "y")));
+        } else {
+          gName.setAttributeNS(null, "y", Number(rect.getAttributeNS(null, "y"))+munit*2);
         }
         
         //adjust the tools gear position, when its garden is resized
@@ -1525,8 +1576,8 @@ function dragging(evt) {
         let soilGear = clickedElement.getElementsByClassName("ulSoil")[0];
         soilGear.setAttributeNS(null, "y", Number(soilGear.getAttributeNS(null, "y"))+adjH);
 
-      
-      } else if (clickedElement.classList.contains("plant")) {
+      } 
+      else if (clickedElement.classList.contains("plant")) {
         rect.setAttributeNS(null, "x", Number(rect.getAttributeNS(null, "x"))-adjW/2);
         rect.setAttributeNS(null, "height", newPH);
         rect.setAttributeNS(null, "y", Number(rect.getAttributeNS(null, "y"))+adjH);
@@ -1535,20 +1586,28 @@ function dragging(evt) {
         adjW /=2;
       }
 
-      //update the positions of size indicators
+      //update the size indicators
       let elts = clickedElement.getElementsByClassName("sizeInd");
-      for (let i = 0; i < 2; i++){
-        elts[i].setAttributeNS(
-          null, 
-          "x", 
-          Number(elts[i].getAttributeNS(null, "x"))+adjW);
-        elts[i].setAttributeNS(
-          null,
-          "y", 
-          Number(elts[i].getAttributeNS(null, "y"))+adjH);
-      }
+      elts[0].setAttributeNS(
+        null, 
+        "x", 
+        Number(elts[0].getAttributeNS(null, "x"))+adjW);
+      elts[0].setAttributeNS(
+        null, 
+        "y", 
+        Number(elts[0].getAttributeNS(null, "y"))+adjH/2);
       //update the text of the width and height indicators
       elts[0].innerHTML = formatSizeDisplay(Number(rect.getAttributeNS(null, "height"))/2);
+      
+      elts[1].setAttributeNS(
+        null, 
+        "x", 
+        Number(elts[1].getAttributeNS(null, "x"))+adjW/2);
+      elts[1].setAttributeNS(
+        null, 
+        "y", 
+        Number(elts[1].getAttributeNS(null, "y"))+adjH);
+      //update the text of the width and height indicators
       elts[1].innerHTML = formatSizeDisplay(Number(rect.getAttributeNS(null, "width"))/2);
 
       //update the position of the resizing triangle
@@ -1566,24 +1625,40 @@ function dragging(evt) {
     //MOVING
     else {
       moving = true;
+      console.log(`x: ${coord.x - offset.x}`);
       transform.setTranslate(coord.x - offset.x, coord.y - offset.y);
     }
   }
 }
 
-var nameChangeId = null;
-
 //////////////////////////////////////////////////////////////////////////////////////
 //triggered by mouse or finger up, linked in html
 function touchUp(evt) {
   
+  
+  if (!clickType) {
+    clickType = evt.type;
+  } else if (clickType != evt.type) {
+    return;
+  }
+  
+  console.log(evt.type);
+  
+  if (nameChangeId) {
+    let gName = svgPlace.getElementById("g_"+nameChangeId).getElementsByClassName("editable")[0];
+    gName.style.fontStyle = "normal";
+    gName.setAttributeNS(null, "fill", "rgba(101, 105, 70, 0.75)");
+    gName.classList.remove("blinking-cursor");
+    nameChangeId = null;
+  }
   //the editable garden name
   if(evt.target.classList.contains("editable")) {
     nameChangeId = evt.target.parentElement.getAttributeNS(null, "id");
     nameChangeId = nameChangeId.substring(2, nameChangeId.length);
-  } else {
-    nameChangeId = null;
-  }
+    evt.target.style.fontStyle = "italic";
+    evt.target.setAttributeNS(null, "fill", "blue");
+    evt.target.classList.add("blinking-cursor");
+  } 
 
   //record new plant or garden position in local storage if it's been moved
   if (clickedElement && moving) {
@@ -1622,11 +1697,11 @@ function touchUp(evt) {
   }
 
   //the following calls forks with different functionality garden tools or plant 
-  //features for when a plant or garden has been tapped and there is no drag
-  if (!moving && !resize) {
+  //features for when a plant or garden has been tapped and there is no drag or 
+  //resize, & it's not a double reaction to a click (either mouse or tap, not both)
+  if (!moving && !resize ) {
     if (evt.target.classList.contains("plant")
-        || evt.target.parentElement.classList.contains("plant")
-       ){
+        || evt.target.parentElement.classList.contains("plant")){
       plantFork(evt.target);
     } 
     else if (evt.target.className.baseVal === "garden" || 
@@ -1735,7 +1810,7 @@ function checkForIntersect(grdns){
 //////////////////////////////////////////////////////////////////////
 //this function is triggered by double click, which is set in html SVG element
 function dblTouch(evt) {
-  
+  console.log(evt.type);
   hideDropDown();
   
   //if an editable name field is double-clicked on the garden, leave this module, 
