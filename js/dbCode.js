@@ -1,14 +1,17 @@
-/********** v.7.3 **********/
+/********** v.7.3.1 **********/
 /* 
 TODO:
  # fixed: 
-  - fixed various filtering issues, replaced *** with , ... appended to the first entry
-  - time-related drop downs should have months and/or seasons only IN PROGRESS
+  - filtering - don't show values that are excluded by columns, other than clicked
+  - fixed various filtering issues, replaced *** with ... 
+  - reveresed time-related drop downs, better to filter by values, like it was
 
  # issues: 
   - editable columns & added plants: tab in/out of the window, undos etc. need attention
+  - filters - shows only first letter on reload?
   
  # improvements:
+  - add season column for when the plant is present in the garden
   - add upload image functionality
   - add functionality to allow users to submit their changes and additions to be added to the main db
   - see if sorting can be reworked to speed it up
@@ -29,7 +32,7 @@ TODO:
    #################
  - in this script, a plain ID number is reserved for IDs for plants (rows) added by a user;
  - for efficiency, editable contents columns support is designed around the order of those columns, 
- - those are columns Notes (3rd column, index 2, in JSON 1), Action (4th, 3, 2), Garden Qty & Location (14th, 13, 12)
+ - those are columns Notes (3rd column, index 2, in JSON 1), Action (4th, 3, 2), In Garden (14th, 13, 12)
  - should the column order change, update the code in allClicks(), used to be addBtnUsrChgs(),
  - & appendPlantToTable() as well as visual.js code accordingly
 */
@@ -55,7 +58,7 @@ function main() {
 
   let objNotes = null,
       objAction = null,
-      objGardenQaL = null;
+      objInGarden = null;
 
   //XMLHttpRequest to pull the data from JSON file
   if (window.XMLHttpRequest) {
@@ -119,7 +122,7 @@ function main() {
             "<img class='btnImg' src='pictures/btnLeafDown.png' border=0></button></td>";
         }
         //if the last column, picture, don't need the drop down filtering button
-        else if (i === l) {
+        else if (i === (l)) {
           txt += "<td class='frozenFilterRow'></td>";
         }
         //all other columns
@@ -147,8 +150,7 @@ function main() {
         //add data row <tr> and place a <td> with common name in it; 
         txt += "<tr><td class='frozenCol'>" + myObj[x][0] + "</td>"; 
         
-        //if the local storage is available, pull Notes,
-        //Action and Quantity in Garden, if those exist
+        //if the local storage is available, pull Notes, In Garden, if those exist
         if (typeof (Storage) !== "undefined") {
           try {
             objNotes = JSON.parse(localStorage.aas_myGardenDb_Notes);
@@ -163,10 +165,10 @@ function main() {
             //no Action in local storage, no problem
           }
           try {
-            objGardenQaL = JSON.parse(localStorage.aas_myGardenDb_QuantityInGarden);
+            objInGarden = JSON.parse(localStorage.aas_myGardenDb_InGarden);
           }
           catch (error) {
-            //no Qty in Garden in local storage, no problem
+            //no In Garden in local storage, no problem
           }
         }
 
@@ -205,13 +207,13 @@ function main() {
                 }
               }
               break;
-            //Quantity in Garden field, only load user's saved
+            //In Garden field, only load user's saved
             case 12:
               txt += "<td contenteditable=true>";
-              //objGardenQaL - all Quantity in Garden in local storage
-              if (objGardenQaL) {
-                if (objGardenQaL[x]) {
-                  txt += objGardenQaL[x];
+              //objInGarden - all In Garden in local storage
+              if (objInGarden) {
+                if (objInGarden[x]) {
+                  txt += objInGarden[x];
                 } else {
                   txt += myObj[x][i];
                 }
@@ -293,7 +295,8 @@ function main() {
             else {
               //if more than filter choice
               if (Array.isArray(filters[i]) && filters[i].length > 1) {
-                table.children[0].children[1].children[i].children[0].value = filters[i][0] + ", ...";
+                table.children[0].children[1].children[i].children[0].value = "...";
+                
               } else {
                 table.children[0].children[1].children[i].children[0].value = filters[i][0].toLowerCase();
               }
@@ -310,8 +313,8 @@ function main() {
         //the Export/Import are separated from the rest of the choice name by no space 
         //on purpose, this is used later in code, the rest needs to not be \xa0
         addDropDown("dropExportImport",
-        ["Export\xa0Notes", "Export\xa0Action", "Export\xa0Quantity In Garden", 
-        "Import\xa0Notes", "Import\xa0Action", "Import\xa0Quantity In Garden"]);
+        ["Export\xa0Notes", "Export\xa0Action", "Export\xa0In Garden", 
+        "Import\xa0Notes", "Import\xa0Action", "Import\xa0In Garden"]);
 
         //check the view type in session storage and adjust the view if needed
         //full view is not stored, thus for it the following clause is skipped
@@ -409,7 +412,7 @@ function impExp(tgt) {
     displayDoneBtn.classList.add("imp");
     //hide the button until the correctly formatted text entry is made
     displayDoneBtn.style.display = "none";
-    //the value reflects notes, action or quantity
+    //the value reflects notes, action or location
     displayDoneBtn.value = specs[1];
     img.src = 'pictures/btnShovel.png';
     //update assisting text for the text area
@@ -586,19 +589,24 @@ function addToLocal(row, recordNumber) {
   //instead, the columns and headers order is matched;
   let origTblHeaders = ['Latin\xa0Name','Common\xa0Name','Notes','Action','Class',
                         'Height','Width','Color','Leaves','Bloom\xa0Time','Fruit\xa0Time',
-                        'Sun','Roots','Quantity\xa0In\xa0Garden','Natural\xa0Habitat',
+                        'Sun','Roots','In\xa0Garden','Season','Natural\xa0Habitat',
                         'Origin','Wildlife','Companions','Ally','Enemy','Soil',
                         'When\xa0To\xa0Plant','Days\xa0To...','How\xa0To\xa0Prune',
                         'When\xa0To\xa0Prune','Food\xa0And\xa0Water','How\xa0To\xa0Plant',
                         'When\xa0To\xa0Feed','Propagating','Problems','Picture'];
 
   let arrNewPlantVal = [];
+  //record new plant's values in an array
   for (let i = 0; i < arrHeaders.length; i++) {
-    //record new plant's values in an array
     //for the common name (index 0), the text is inside the div inside td
     if (i === 0) {
       arrNewPlantVal.push(row.children[i].childNodes[0].textContent.toString());
-    } else {
+    }
+    //for photo, place 0 until the functionality to upload photos is ready
+    else if (i === arrHeaders.length - 1) {
+      arrNewPlantVal.push("0");
+    }
+    else {
       arrNewPlantVal.push(row.children[i].textContent.toString());
     }
   }
@@ -704,9 +712,9 @@ function addInnerButton(type) {
 //////////////////////////////////////////////////////////////////////
 //this function is triggered on key up within the body of the table
 //it adds buttons to the common name of a plant whose notes, action
-//or garden loc & qty fields are being modified
+//or in garden fields are being modified
 function addBtnUsrChgs(clickedCell) {
-    console.log(`text: ${clickedCell.innerText}, e.type: ${event.type}, key: ${event.key}, code: ${event.keyCode}`);
+//     console.log(`text: ${clickedCell.innerText}, e.type: ${event.type}, key: ${event.key}, code: ${event.keyCode}`);
   // exit, if the user is editing a plant that they've added, text
   // hasn't been entered yet or the cell has just been tabbed into
   if (clickedCell.parentElement.className === "addedRows" 
@@ -875,7 +883,8 @@ function sortTable(colNum) {
     rowNum++; 
     sortAsc = (table.rows[rowNum].children[colNum].innerText > table.rows[rowNum+1].children[colNum].innerText);
   } 
-  while (table.rows[rowNum].children[colNum].innerText === table.rows[rowNum+1].children[colNum].innerText)
+  while (rowNum < (table.rows.length-2) && 
+    table.rows[rowNum].children[colNum].innerText === table.rows[rowNum+1].children[colNum].innerText)
     
   // Make a loop that will continue until no switching can be done
   while (switching) {
@@ -1027,7 +1036,7 @@ function clearFilter(clickedElt) {
     }
     else {
       removeClearingBtn(forCell);
-      forCell.children[0].placeholder = ""
+      forCell.children[0].placeholder = "";
       cleanView();
     }
     //call filter data with empty parameters to unfilter the table
@@ -1098,22 +1107,23 @@ function filterData() {
         }
       }
       
-      //when a month drop down choice is a filter criteria
-      if (["Bloom\xa0Time", "Fruit\xa0Time", "When\xa0To\xa0Plant", "When\xa0To\xa0Prune", "When\xa0To\xa0Feed"].
-          includes(arrHeaders[Object.keys(filters)])) {
-        for (k in filters[key]) {
-          if (cellContents.toUpperCase().includes(filters[key][k])) {
-            showFlag = true;
-            break;
-          } else 
-          {
-            showFlag = false;
-          }
-        }
-      }
+//       //when a month drop down choice is a filter criteria
+//       if (["Bloom\xa0Time", "Fruit\xa0Time", "When\xa0To\xa0Plant", "When\xa0To\xa0Prune", "When\xa0To\xa0Feed"].
+//           includes(arrHeaders[Object.keys(filters)])) {
+//         for (k in filters[key]) {
+//           if (cellContents.toUpperCase().includes(filters[key][k])) {
+//             showFlag = true;
+//             break;
+//           } else 
+//           {
+//             showFlag = false;
+//           }
+//         }
+//       }
 
-      //when a drop down choice(s) is a filter criteria
-      else if (Array.isArray(filters[key])) {
+//       //when a drop down choice(s) is a filter criteria
+//       else 
+      if (Array.isArray(filters[key])) {
         if (!filters[key].includes(cellContents.toUpperCase())) {
           showFlag = false;
           break;
@@ -1174,47 +1184,56 @@ function getUnqVals(forCell) {
       dropList.append(liText);
     }
   }
-  //columns with time of the year display months instead of unique values
-  else if (["Bloom\xa0Time", "Fruit\xa0Time", "When\xa0To\xa0Plant", "When\xa0To\xa0Prune", "When\xa0To\xa0Feed"].includes(colName)) {
-    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    for (m in months) {
-      let liText = document.createElement("li");
-      liText.setAttribute("class", "customChoice");
-      liText.appendChild(document.createTextNode(months[m]));
-      dropList.appendChild(liText);
-    }
-  }
+//   //columns with time of the year display months instead of unique values
+//   else if (["Bloom\xa0Time", "Fruit\xa0Time", "When\xa0To\xa0Plant", "When\xa0To\xa0Prune", "When\xa0To\xa0Feed"].includes(colName)) {
+//     let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+//     for (m in months) {
+//       let liText = document.createElement("li");
+//       liText.setAttribute("class", "customChoice");
+//       liText.appendChild(document.createTextNode(months[m]));
+//       dropList.appendChild(liText);
+//     }
+//   }
   
-  //maybe todo: 
-  
+  //maybe todo, all affect filtering: 
   //class column should only display each one class, not the filtered variety
-  
   //color column should only display each one color, not the filtered variety
-  
   //leaves column should only display each one leaves choice, not the filtered variety
-  
   //origin column should only display each one origin, not the filtered variety
-  
   //soil column should only display each one soil type, not the filtered variety
+  //time related columns should only display months or seasons 
   
-  //all other columns, not size of plant or time of year
+  //all other, non-size, columns
   else {
     let tr = table.getElementsByTagName("tr");
     //the array rUnqVals will hold unique values from the given column
     let rUnqVals = [];
+    loopTableRows:
     for (let i = 2, l = tr.length - 2; i < l; i++) {
       //add value to the drop down if it hasn't been hidden (display isn't none) 
       //OR the clicked column is already used for filtering (its index is in filters)
-      //or if pulling common names to add a new plant
+      //OR if pulling common names to add a new plant
       if (tr[i].style.display != "none" 
           || filters[forCell.cellIndex] 
           || forCell.children[1].id.toString().substr(0,11) === "btnNewPlant") {
-        if (tr[i].style.display != "none" && filters[forCell.cellIndex] 
-            || tr[i].style.display === "none" && !filters[forCell.cellIndex] ) {
-          console.log("check filters: function getUnqVals is suspicious");
+        //if not pulling common names to add a new plant, don't show values that
+        //are filtered out based on columns other than the one clicked
+        if (forCell.children[1].id.toString().substr(0,11) != "btnNewPlant") {
+          //loop through filters and exclude rows that are not included in filters
+          loopExistingFilters:
+          for (key in filters) {
+            //keep the clicked column
+            if (Number(key) === forCell.cellIndex) {
+              continue; //next filter
+            }
+            //exclude values that are filtered out for other columns
+            if (!filters[key].includes(tr[i].children[key].textContent.toUpperCase())) {
+              continue loopTableRows;
+            }
+          }
         }
         let cellValue = tr[i].children[forCell.cellIndex].innerText;
-        //only add the value if it's not already in the array and if it's not an empty value
+        //only add the value if it's not already in the array and if it's not an empty value and if it's not filtered out using other than clicked on columns
         if (rUnqVals.indexOf(cellValue) === -1 && cellValue.length > 0) {
           rUnqVals.push(cellValue);
         }
@@ -1315,7 +1334,7 @@ function displayColumns(tgt) {
   //determine which columns to show, based on the view chosen
   switch (tgt.innerText) {
     case "Plan":
-      showColName = ['Common\xa0Name','Notes','Action','Class','Height','Width','Color','Leaves','Bloom\xa0Time','Sun','Roots','Quantity\xa0In\xa0Garden','Natural\xa0Habitat','Origin','Wildlife','Companions','Ally','Enemy','Soil','When\xa0To\xa0Plant','Picture'];
+      showColName = ['Common\xa0Name','Notes','Action','Class','Height','Width','Color','Leaves','Bloom\xa0Time','Sun','Roots','In\xa0Garden','Natural\xa0Habitat','Origin','Wildlife','Companions','Ally','Enemy','Soil','When\xa0To\xa0Plant','Picture'];
       break;
     case "Care":
       showColName = ['Common\xa0Name','Notes','Action','Soil','How\xa0To\xa0Plant','When\xa0To\xa0Plant','Days\xa0To...','How\xa0To\xa0Prune','When\xa0To\xa0Prune','Food\xa0And\xa0Water','When\xa0To\xa0Feed','Propagating','Problems','Picture'];
@@ -1449,7 +1468,7 @@ function allClicks(e) {
   tgt.className==="btnImg"?tgt=tgt.parentElement:tgt;
     
   let impTextFormatCheck = function(txt) {
-    //validate the format of the data to import "Latin Name":"notes, action or quantity text"
+    //validate the format of the data to import "Latin Name":"notes, action or location text"
     if (txt.search(/(\".+\":\".+\")/g) > -1) {
       return true;
     }
@@ -1498,8 +1517,8 @@ function allClicks(e) {
 //       tgt.parentElement.parentElement.querySelector("#btnNewPlantSubmit").style.display = "block";
     }
     
-    //if changes are made to Notes, Action, or Quantity in Garden columns
-    else if (["Notes", "Action", "Quantity\xa0In\xa0Garden"].includes(arrHeaders[tgt.cellIndex])) {
+    //if changes are made to Notes, Action, or In Garden columns
+    else if (["Notes", "Action", "In\xa0Garden"].includes(arrHeaders[tgt.cellIndex])) {
       addBtnUsrChgs(tgt);
     }
     
@@ -1538,8 +1557,8 @@ function allClicks(e) {
              && (e.clipboardData || window.clipboardData).getData("text").match(/^.+$/)) {
       filterBySizeRange(e);
     }
-    //if data is pasted into editable Notes, Action, or Quantity in Garden columns (not filter)
-    else if (["Notes", "Action", "Quantity\xa0In\xa0Garden"].includes(arrHeaders[tgt.cellIndex])) {
+    //if data is pasted into editable Notes, Action, or In Garden columns (not filter)
+    else if (["Notes", "Action", "In\xa0Garden"].includes(arrHeaders[tgt.cellIndex])) {
       addBtnUsrChgs(tgt);
     }
     //if data is pasted into import window
@@ -1577,8 +1596,8 @@ function allClicks(e) {
     else if (tgt.classList.contains("imp") && tgt.tagName === "TEXTAREA") {
       tgt.parentElement.children[2].style.display = "none";
     }
-    //if changes are made to Notes, Action, or Quantity in Garden columns
-    else if (["Notes", "Action", "Quantity\xa0In\xa0Garden"].includes(arrHeaders[tgt.cellIndex])) {
+    //if changes are made to Notes, Action, or In Garden columns
+    else if (["Notes", "Action", "In\xa0Garden"].includes(arrHeaders[tgt.cellIndex])) {
       addBtnUsrChgs(tgt);
     }
     else return;
@@ -1673,7 +1692,7 @@ function allClicks(e) {
 //         if (orAr[i].cellIndex===1){console.log(orAr[i].innerText);}
 //       }
       
-      // ensure the correct JSON-parseable format of imported data "Latin Name":"notes, action or quantity text"
+      // ensure the correct JSON-parseable format of imported data "Latin Name":"notes, action or location text"
       // by splitting the text's key value pairs, replacing double quotes with two singles ane recomposing
 
       // ..1. starting at the first double quote, thus skipping optional title, 
@@ -1772,7 +1791,7 @@ function allClicks(e) {
         }
         //if more than one value is selected, add a comma and ellipsis
         else if (filters[forCell.cellIndex].length === 2) {
-          forCell.children[0].value += ", ...";
+          forCell.children[0].value = "...";
           sessionStorage.filters=JSON.stringify(filters);
         }
         //if values are deleted, diplayed that (emptyness)
@@ -1829,7 +1848,7 @@ function allClicks(e) {
       copyRow(tgt);
     }
 
-    //click on save changes button in Notes, Action, or Quantity in Garden columns
+    //click on save changes button in Notes, Action, or In Garden columns
     else if (tgt.classList.contains("btnUpdatePlant")) {
       updateExistingPlant(tgt);
     }
