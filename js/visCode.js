@@ -1,47 +1,35 @@
-/********** v.7.4 **********/
+/********** v.7.4.1 **********/
 
 /*  changes:
 
   *** DONE ***
-  - added soil UL in the bottom left corner 
-  - added boundaries;
-  - added moving plant into garden functionality
-  - garden sizing
-  - fixed: delete all plants/gardens bug
-  - added plants to gardens
-  - redesigned plants  
-  - garden name support - changed to foreign
-  - changed to keep add garden/plnt menu until tapped out
-  - fixed: garden size: incorrect updating, cutting in half
-  - fixed: remove dashes from the name when pulling a photo of a plant
-  - renamed pUp to a more appropriate plantLook
-  - changed plantInfo to foreignObject to allow text-wrap
-  - renamed makeEditableName function to makeForeignObject
-  - moved size indicators from being centered to the top and left of the garden, so that it doesn't overlap with tools drop down
-  - changed font size handling to be set in css for all, except for garden name zooming
-  - changed plant and garden class names for groups to plantGrp and gardenGrp
-  - added a toolbox with garden "planting" choices based on: garden name, companions, duplicate a garden (other in progress)
-  
-  *** NEW ***  
-  -------changes:
-  - add functionality to display instructions for when the page is first loaded and there is no design
-  - maybe change the delete to be triggered by a trashcan button, next to size for the plant and in settings for the garden instead of double click
-  - toolbox with garden "planting" choices:...
-  - limit plant name length
+  - added functionality to display instructions for when the page is first loaded and there is no design  
+  - limited plant name length to 15 characters
+  - changed size var to 6
+  - garden toolbox: add all plants to garden
+  - when adding a plant from garden's settings, the plant needs to be added to that garden
   - when adding a plant or a garden, make sure it doesn't go beyond boundaries
+  - fix toggle all photos - availability can't be based on first plant
+  
+  *** ToDo ***  
+  
+  - change the trigger of delete to an x-button, instead of double click  
+  
   - add photo gallery functionality (share with db and home)
 
-  - add season simulation: pick a month -> color what's in bloom
-  - add alphabet or plant type to the right of add p/g menu for speed (same on db?)
-  - switching between inches and cm needs more for to handle plants
+  - keep working on filters: shade should not be picked up in part-shade, etc.
   
-  toolbox:
-    plants from db for the garden name
-    plants-companions for a certain planted plant (as a list or as groups, based on heights)
-    plants based on garden size, sun & soil
-    round vs rect garden shape?
-    garden zooming in/out
+  - add color all plant names, using the first color available, dark green for default
+  - add season simulation: pick a month -> color what's in bloom
 
+- add alphabet or plant type to the right of add p/g menu for speed (same on db?)
+  - switching between inches and cm needs more for to handle plants
+  - add multicolor flowering support, maybe using gradients 
+
+  - maybe change the delete to be triggered by a trashcan button, next to size for the plant and in settings for the garden instead of double click
+  toolbox:
+    - round vs rect garden shape?
+    - garden zooming in/out
 */
 
 
@@ -54,7 +42,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 var xmlns = "http://www.w3.org/2000/svg";
 var svgPlace = null;
-var size = 2; //the size of the svg view and port, also used for the size of the garden rect
+var size = 6; //the size of the svg view and port, now only used for the size of the garden rect
+//sizing ratio is set to 1" = 10px (1' = 120px)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      moving and resizing
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,13 +61,14 @@ var mobile = false;   //on the mobile devices, both touch and mouse up and down 
 //////////////////////////////////////////////////////////////////////
 //this function is called on window load and loads existing garden design from user's local storage
 function myMain(){
+  
   svgPlace = document.getElementById("svgArea");
-  svgPlace.setAttributeNS(null, "width", window.screen.width*size);
-  svgPlace.setAttributeNS(null, "height", window.screen.height*size);
+  svgPlace.setAttributeNS(null, "width", window.screen.width*2);
+  svgPlace.setAttributeNS(null, "height", window.screen.height*2);
   svgPlace.viewBox.baseVal.x = 0;
   svgPlace.viewBox.baseVal.y = 0;  
-  svgPlace.viewBox.baseVal.width = window.screen.width * size;
-  svgPlace.viewBox.baseVal.height = window.screen.height * size;
+  svgPlace.viewBox.baseVal.width = window.screen.width * 2;
+  svgPlace.viewBox.baseVal.height = window.screen.height * 2;
   
   // munit = my unit, the font size, if set to 14, munit is ~7.11
   munit = Math.round((Number(window.getComputedStyle(svgPlace, null).getPropertyValue("font-size").replace("px",""))/1.9 + Number.EPSILON) * 100) / 100;
@@ -110,12 +100,6 @@ function myMain(){
   if(checkLocalStorage()){
     loadExistingDesign();
   }
-  
-  let today = new Date();
-  document.getElementsByTagName("p")[0].innerText += 
-    " " + today.toString().split(" ")[2] + 
-    " " + today.toString().split(" ")[1] + 
-    " " + today.toString().split(" ")[3];
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -167,7 +151,7 @@ function checkLocalStorage() {
 //pull previously designed gardens and plants and recreate them
 function loadExistingDesign() {
   //  capture the number of gardens created
-  let gardens = localStorage.aas_myGardenVs_grdns;
+  let gardens =  localStorage.aas_myGardenVs_grdns;
   if (gardens){
     gardens = gardens.split(",");
     for (var i = 0, l = gardens.length; i < l; i++){
@@ -221,11 +205,24 @@ function loadExistingDesign() {
   }
   
   if (!gardens && !plants) {
-//     todo: add text for initial display 
-//     "Welcome to your garden design page. To add a plant or a garden, double click anywhere in the blue area. The pop-up menu, brought up by double clicl, will allow addition and removal of gardens and plants. Double tap of an individual garden or plant will delete that garden. "
-//     "Once a garden is added, change its name to one of those recorded in the database tab to pull the plants you've assigned to that garden in the database. Setting the sun and soil of a garden will allow to populate the garden with suitable plants. "
-//     "Moving one plant inside a garden allows to pull up companions for that plant. The three functionalities listed above are available in the garden's settings. "
-    
+    let initText = document.createElement("div");
+    initText.id = "initText";
+    initText.textContent = "Welcome to the Garden Design page. "+
+     "To add or delete a plant or a garden, double click anywhere in the blue area. "+
+      "Double clicking individual garden or plant deletes that garden or plant. "+
+      "Once a garden is added, you can change its name and resize it. From garden's "+
+      "settings, you can pull plants based on garden name, sun and soil, compatibility. "+
+      "Note, your personal garden design will be saved on your computer. "+
+      "To use this page, your browser must support and allow local storage. "+
+      "Disable local storage restrictions at your own risk.".toUpperCase()
+    let closeButton = document.createElement("button");
+    closeButton.textContent = "x";
+    closeButton.classList.add("btnClose");
+    closeButton.addEventListener("click", function(evt) {
+      document.body.removeChild(evt.target.parentElement);
+    });
+    initText.appendChild(closeButton);
+    document.body.appendChild(initText);
   }
 }
 
@@ -310,12 +307,13 @@ function getAvgNum(origVal) {
 //this function returns UL drop down menu with the values either  
 //supplied in the menu parameter or pulled from plants json file
 function getUL(menu) {
-	//the menu parameter has: xPos, yPos, type, [values]
+	//the menu parameter has: xPos, yPos, type, [gId], [values]
   hideDropDown();
   
   let dropMenu = document.createElement("ul");
   dropMenu.className = "dropDown";
   
+  //if menu values are supplied, add them to the menu
   if (menu.values) {
     for (var i = 0, l = menu.values.length; i < l; i++){
       let liText = document.createElement("li");
@@ -351,10 +349,10 @@ function getUL(menu) {
             myObj[arrPlntVals[0]] = arrPlntVals.slice(1);
           }
         }
-        //also remove the first entry in myObj, as it's has column headers
+        //also remove the first entry in myObj, as it's has column headers and isn't needed
         delete myObj["Latin&nbspName"];
         
-        //the returned plants are filtered, if requested
+        //the returned plants are filtered, as requested
         if (menu.type === "companions") {
           menu.filter = (
               myObj[menu.forPlant][16].toLowerCase().split(",") + ", " +
@@ -374,20 +372,30 @@ function getUL(menu) {
           menu.filter = newFilters;
         }
         
-        if (menu.type != "all" && menu.filter === ", ") {
+        if (menu.type != "all" && (menu.filter === ", " || !menu.filter.length)) {
           let liText = document.createElement("li");
           liText.textContent = "There are no recorded plants";
           dropMenu.appendChild(liText);
           liText = document.createElement("li");
           liText.textContent = "that match this criteria."
           dropMenu.appendChild(liText);
-        } else 
-        { for (x in myObj) {
-
-            //if a plant name (0) is in the list of plantFilters, add it as a companion plant
+        } 
+        else {
+          if (menu.type != "all") {
+            //add an option to add all filtered plants to the garden
+            let liText = document.createElement("li");
+            liText.className = "customChoice plant";
+            liText.textContent = "Add All Plants";
+            dropMenu.appendChild(liText);
+          }
+          //add filtered plant names to the menu
+          for (x in myObj) {
             if (menu.type === "all" 
+                //if a plant name (0) is in the list of plantFilters, add it as a companion plant
                 || menu.type === "companions" && menu.filter.includes(myObj[x][0].toLowerCase())
+                //if the month matches
                 || menu.type === "timeToPlant" && myObj[x][21].toLowerCase().indexOf(menu.filter) > -1
+                //if the name of current garden is local storage
                 || menu.type === "gName" && menu.filter.includes(x)
                 || menu.type === "sunSoil" 
                   && myObj[x][10].toLowerCase().indexOf(menu.filter[0]) > -1
@@ -425,6 +433,15 @@ function getUL(menu) {
   return dropMenu;
 }
 
+function rangeCheck(x, min, max) {
+  x = parseInt(x, 10);
+  if (x >= min && x < max) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 //////////////////////////////////////////////////////////////////////
 //call function to make a UL and add onclick functionality to each LI
 function addPlantMenu(menu) {
@@ -434,24 +451,85 @@ function addPlantMenu(menu) {
   
   //assign an onclick response to each plant, to add a plant to the left of the menu
   dropDownMenu.addEventListener("click", function(evt) {
+    //make sure the click is on a custom choice, aka a choice in the menu
     if (evt.target.classList.contains("customChoice")) {
-      addPlant({
-        pId:null, 
-        x:Number((parseFloat(evt.target.parentElement.style.left)
-        - evt.target.textContent.length*munit).toFixed(2)),
-        y:event.pageY,
-        w:Number(evt.target.getAttribute("data-avgw")),
-        h:Number(evt.target.getAttribute("data-avgh")),
-        tx:0, 
-        ty:0, 
-        nm:evt.target.innerText, //plant's common name
-        gId:0, //a garden id, where the new plant is planted, 0 at first
-        lnm:evt.target.getAttribute("data-lnm"), //plant's latin name
-        img:(evt.target.getAttribute("data-img")), //image file availability
-        clr:0 //initially, the color value is a darker green which is set within addPlant() when this value is 0
-        });
+      //the 'Add All Plants' choice is only available in 3 menus from garden's settings
+      if (evt.target.innerText === "Add All Plants") {
+        //when adding all plants, group them by height vertically and space evenly horizontally; 
+        let totl = evt.target.parentElement.childElementCount;
+        let ar = Array.from(evt.target.parentElement.getElementsByTagName("li"));
+        //divide garden's width by the total number of plants in each height group
+        let xSp1 = menu.gW / (ar.filter(x=> rangeCheck(x.getAttributeNS(null, "data-avgh"),0,24)).length);
+        let xSp2 = menu.gW / (ar.filter(x=> rangeCheck(x.getAttributeNS(null, "data-avgh"),24,48)).length);
+        let xSp3 = menu.gW / (ar.filter(x=> rangeCheck(x.getAttributeNS(null, "data-avgh"),48,72)).length);
+        let xSp4 = menu.gW / (ar.filter(x=> Number(x.getAttributeNS(null, "data-avgh"))>=72).length);
+        
+        //x-offset variables - one for each height group and one for current plant's offset
+        let x1 = x2 = x3 = x4 = xOffset = 0;
+
+        //loop through filtered plants and add them to the garden, from which the call was made
+        for (let i = 1; i < totl; i++) { 
+          //using garden height, gH, calculate the desired vertical spacing of plant groups
+          //horizontally, plants are spaced at xOffset intervals
+          let yOffset = menu.gH/3;
+          if (Number(evt.target.parentElement.children[i].getAttribute("data-avgh")) < 24) {
+            yOffset *= 2.5;
+            xOffset = x1 * xSp1;
+            x1++;
+          } else if (Number(evt.target.parentElement.children[i].getAttribute("data-avgh")) < 48) {
+            yOffset *= 2;
+            xOffset = x2 * xSp2;
+            x2++;
+          } else if (Number(evt.target.parentElement.children[i].getAttribute("data-avgh")) < 72) {
+            yOffset *= 1.5;
+            xOffset = x3 * xSp3;
+            x3++;
+          } else {
+            xOffset = x4 * xSp4;
+            x4++;
+          }
+          if(i%2) { yOffset += munit*1.5; }
+          
+          addPlant({
+            pId:null,   //plant id
+            x:menu.gX + xOffset,  //x pos
+            y:menu.gY + yOffset,  //y pos
+            w:Number(evt.target.parentElement.children[i].getAttribute("data-avgw")), //plant's width
+            h:Number(evt.target.parentElement.children[i].getAttribute("data-avgh")), //plant's height
+            tx:0, //x-transpose (0 , because gX includes transpose)
+            ty:0, //y-transpose (0 , because gY includes transpose)
+            nm:evt.target.parentElement.children[i].innerText, //plant's common name
+            gId:menu.gId, //a garden id, where the new plant is planted, 0 at first
+            lnm:evt.target.parentElement.children[i].getAttribute("data-lnm"), //plant's latin name
+            img:(evt.target.parentElement.children[i].getAttribute("data-img")), //image file availability
+            clr:0 //initially, the color value is a darker green which is set within addPlant() when this value is 0  
+          });          
+        }
+      } 
+      //if an individual plant was clicked, add it to the svg place (gId of 0)
+      else {
+        //if a plant is being added to a garden, center it within the garden
+        //else, if it's a freestanding plant, place it to the left of menu, 
+        //vertically at the y position of a click, which is near plant's name
+        addPlant({
+          pId:null, //plant id is set to null, when creating a new plant
+          x: menu.gId?menu.gX + menu.gW/2:Number((parseFloat(evt.target.parentElement.style.left) 
+                                                  - evt.target.textContent.length*munit).toFixed(2)),
+          y: menu.gId?menu.gY + menu.gH/2:event.pageY,
+          w:Number(evt.target.getAttribute("data-avgw")),
+          h:Number(evt.target.getAttribute("data-avgh")),
+          tx:0, //translate/transpose x
+          ty:0, //translate/transpose y
+          nm:evt.target.innerText, //plant's common name
+          gId:menu.gId?menu.gId:0, //a garden id, where the new plant is planted, 0 at first
+          lnm:evt.target.getAttribute("data-lnm"), //plant's latin name
+          img:(evt.target.getAttribute("data-img")), //image file availability
+          clr:0 //initially, the color value is a darker green which is set within addPlant() when this value is 0
+          });
+      }
     }
   });
+  //the menu with event listeners have been created, now the menu can be added to the document, not svg
   document.body.appendChild(dropDownMenu);
 }
 
@@ -466,7 +544,7 @@ function addGardenPlantUL() {
   if (clkdElt.innerText === "New\xa0Garden") {
 //     fade(clkdElt);
     hideDropDown();
-    addGarden(
+    addGarden( 
       {
         gId:null,
         x:parseFloat(event.target.parentElement.style.left),
@@ -509,7 +587,8 @@ function addGardenPlantUL() {
   else if (clkdElt.innerText.slice(0,6) === "Delete") {
     
     //confirm the removal of all plants or gardens
-    if (localStorage.aas_myGardenVs_warnings && !(Number(localStorage.aas_myGardenVs_warnings))){
+    if (localStorage.aas_myGardenVs_warnings && !(Number(localStorage.aas_myGardenVs_warnings)))
+    {
       if (!confirm("Would you like to " + clkdElt.innerText + "?")){
         return;
       }
@@ -614,18 +693,6 @@ function formatSizeDisplay(x1, x2) {
 //     return result;
 }
 
-//////////////////////////////////////////////////////////////////////
-//toggle the display of the size, width and height indicators, 
-//and resizing triangle for plants 
-function sizersDisplay(eltGrp, displayVal) {
-  let sizers = [];
-  sizers.push(eltGrp.getElementsByClassName("resize")[0]);
-  sizers.push(eltGrp.getElementsByClassName("sizeInd")[0]);
-  sizers.push(eltGrp.getElementsByClassName("sizeInd")[1]);
-  for (var i = 0, l=sizers.length; i < l; i++) {
-    sizers[i].style.display = displayVal;
-  }
-}
 
 //////////////////////////////////////////////////////////////////////
 //this function pulls specific plant info using Latin Name stored in desc of a plant
@@ -672,8 +739,8 @@ function getPlantInfo(clkdElt, displayVal){
         //convert colors to camel case, for when composed of more than one word
         //the text shows normal color name, with spaces, while desc holds camelCased color name
         clkdElt.parentElement.appendChild(makeText(
-          {x:Number(clkdElt.getAttributeNS(null, "x"))+munit,
-           y:Number(clkdElt.getAttributeNS(null, "y"))+munit*offset,
+          {x:Number(clkdElt.getAttributeNS(null, "x")),
+           y:Number(clkdElt.getAttributeNS(null, "y"))+munit*offset*1.5,
            cls:"fauxLi",
            clr:convertColors(plantColors[i]),
            txt:plantColors[i],
@@ -697,7 +764,7 @@ function getPlantInfo(clkdElt, displayVal){
           x:Number(clkdElt.getAttributeNS(null, "x")) + munit * 7,
           y:Number(clkdElt.getAttributeNS(null, "y")) + offset,
           w:200,
-          h:50,
+          h:70,
           cls:"plantInfo", 
           tp:"div",
           txt:plantInfoFields[f] + myObj[clkdElt.getAttributeNS(null, "desc")][f]});
@@ -713,15 +780,16 @@ function getPlantInfo(clkdElt, displayVal){
 }
 
 //////////////////////////////////////////////////////////////////////
-//this function converts color codes to strings and holds custom color specs 
+//this function converts color codes to strings and back, depending on
+//the input; it also holds custom color specs 
 function colorCoder (string) {
   let colorCodes = {
+    //darkgreen is a special case, used as default, keep as is below
+    "darkgreen":"rgba(0,100,0,0.75)",
     "green":"rgb(0,100,0)",
     "coral":"rgb(255, 102, 102)",
     "creamy white":"rgb(255, 253, 230)",
     "dark blue":"rgb(0, 0, 153)",
-//     "dark green":"rgba(0,100,0,0.75)",
-    "darkgreen":"rgba(0,100,0,0.75)",
     "dark pink":"rgb(255, 102, 153)",
     "dark purple":"rgb(103, 0, 103)",
     "deep green":"rgb(0, 102, 0)",
@@ -737,12 +805,14 @@ function colorCoder (string) {
     "peach":"rgb(253, 217, 181)",
     "pink":"rgb(255, 102, 153)",
     "pinkish-lavender":"rgb(242, 211, 227)",
-//     "purple and yellow":"",
+    "purple and yellow":"rgba(0,100,0,0.75)",//todo: need code instead of dark green
     "purple red":"rgb(192, 0, 64)",
     "purplish-pink":"rgb(192, 96, 166)",
     "rose":"rgb(255, 153, 204)",
     "violet":"rgb(230, 130, 255)",
+    "white and purple":"rgba(0,100,0,0.75)",//todo: need code instead of dark green
     "yellowish-green":"rgb(198, 210, 98)"};
+  
 	//if an rgb code is sent, return it's normal, displayable name
   if (string.slice(0,3) === "rgb") {
     for(var key in colorCodes) {
@@ -756,6 +826,8 @@ function colorCoder (string) {
     return colorCodes[string];
   }
   //otherwise return a color name without spaces in camel case
+  //this is used when the color isn't listed in colorCodes, but
+  //its name is valid when it's in camel case notation
   else {
     return string.replace(/\s+(.)/g, function (match, group) { 
       return group.toUpperCase()  
@@ -916,7 +988,7 @@ function addGarden(elt){
 
   //the returned grp.id is used for duplicating gardens
   return grp.id;
-  
+ 
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -930,6 +1002,14 @@ function createTriPts(x, y) {
 //////////////////////////////////////////////////////////////////////
 //this function provides decision making for when a garden is clicked
 function gardenFork(clkdElt) {
+  
+  //capture the x&y along with tX&tY of the garden
+  let gnX = Number(clkdElt.parentElement.children[0].getAttributeNS(null, "x"));
+  let gnY = Number(clkdElt.parentElement.children[0].getAttributeNS(null, "y"));
+  let gnTX = clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.e;
+  let gnTY = clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.f;
+  let gnW = Number(clkdElt.parentElement.children[0].getAttributeNS(null, "width"));
+  let gnH = Number(clkdElt.parentElement.children[0].getAttributeNS(null, "height"));
 
   //faux UL click
   if (clkdElt.classList.contains("fauxUl")){
@@ -957,7 +1037,7 @@ function gardenFork(clkdElt) {
       
       //if the name has been changed from New Garden
       if (clkdElt.parentElement.getElementsByClassName("editable")[0].children[0].value != "New Garden") {
-        choices.push("Pull plants for garden name");
+        choices.push("Pull plants for " + clkdElt.parentElement.getElementsByClassName("editable")[0].children[0].value);
         otherTools = false;
       }
       
@@ -971,7 +1051,7 @@ function gardenFork(clkdElt) {
       //if sun and soil have been set
       if (clkdElt.parentElement.getElementsByClassName("ulSun")[0].textContent.split(" ")[0]!="\uf185" &&
           clkdElt.parentElement.getElementsByClassName("ulSoil")[0].textContent.split(" ")[0]!="Soil") {
-        choices.push("Pull plants for this sun & soil");
+        choices.push("Pull plants based on sun & soil");
         otherTools = false;
       }
       
@@ -1013,17 +1093,16 @@ function gardenFork(clkdElt) {
     else if (clkdElt.classList.contains("liTools")) {
       if (clkdElt.textContent === "Duplicate this garden") {
         //the yOffset is needed for the vertical offset of duplicate garden and its plants
-        let yOffset = 
-            Number(clkdElt.parentElement.children[0].getAttributeNS(null, "height"))+munit * 2;
+        let yOffset = gnH+munit * 2;
         //clone the garden
         let dupGardenId = addGarden(
           {gId:null, 
-           x:Number(clkdElt.parentElement.children[0].getAttributeNS(null, "x")),
-           y:Number(clkdElt.parentElement.children[0].getAttributeNS(null, "y")) + yOffset,
-           w:Number(clkdElt.parentElement.children[0].getAttributeNS(null, "width")),
-           h:Number(clkdElt.parentElement.children[0].getAttributeNS(null, "height")),
-           tx:clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.e,
-           ty:clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.f,
+           x:gnX,
+           y:gnY + yOffset,
+           w:gnW,
+           h:gnH,
+           tx:gnTX,
+           ty:gnTY,
            nm:"Duplicate Garden",
            sn:clkdElt.parentElement.getElementsByClassName("ulSun")[0].textContent.split(" ")[0],
            sl:clkdElt.parentElement.getElementsByClassName("ulSoil")[0].textContent.split(" ")[0]
@@ -1053,81 +1132,79 @@ function gardenFork(clkdElt) {
           }
         }
       }
-      else if (clkdElt.textContent === "Pull plants for garden name") { 
-        addPlantMenu({
-          xPos: Number(clkdElt.parentElement.children[0].getAttributeNS(null, "x")) + 
-          clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.e + 
-          Number(clkdElt.parentElement.children[0].getAttributeNS(null, "width")) + 
-          munit * 2 + "px",
-          yPos: Number(clkdElt.parentElement.children[0].getAttributeNS(null, "y")) +
-          clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.f + "px",
-          type: "gName",
-          filter: clkdElt.parentElement.getElementsByClassName("editable")[0].children[0].value.toLowerCase()
-        });
-      }
-      //place the companions' container to the right of the clicked garden 
+      
+      //place in garden, companions, sun/soil plants container to the right of the clicked garden 
       //todo: need to check if no space to the right, in which case - left
-      else if (clkdElt.textContent.substr(0,15) === "Pull companions") {
-        addPlantMenu({  
-          xPos: Number(clkdElt.parentElement.children[0].getAttributeNS(null, "x")) + 
-          clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.e +   
-          Number(clkdElt.parentElement.children[0].getAttributeNS(null, "width")) + 
-          munit * 2 + "px",
-          yPos: Number(clkdElt.parentElement.children[0].getAttributeNS(null, "y")) +
-          clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.f + "px",
-          type: "companions",
-          forPlant: clkdElt.parentElement.getElementsByTagName("g")[0].children[0].getAttributeNS(null, "desc")
-        });
-      }
-      else if (clkdElt.textContent === "Pull plants for this sun & soil") {
+      else if (["Pull plants for", "Pull companions", "Pull plants bas"]
+               .includes(clkdElt.textContent.slice(0,15))) {
+        let flt = null, tp = null, fp = null;
+        switch (clkdElt.textContent.slice(0,15)) {
+          case "Pull plants bas":
+            flt = [clkdElt.parentElement.getElementsByClassName("ulSun")[0].textContent.split(" ")[0].toLowerCase(),
+                   clkdElt.parentElement.getElementsByClassName("ulSoil")[0].textContent.split(" ")[0].toLowerCase()],
+            tp = "sunSoil";
+            break;
+          case "Pull plants for":
+            flt = clkdElt.parentElement.getElementsByClassName("editable")[0].children[0].value.toLowerCase();
+            tp = "gName";
+            break;
+          case "Pull companions":
+            fp = clkdElt.parentElement.getElementsByTagName("g")[0].children[0].getAttributeNS(null, "desc"),
+            tp = "companions";
+            break;
+          }
         addPlantMenu({
-          xPos: Number(clkdElt.parentElement.children[0].getAttributeNS(null, "x")) + 
-          clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.e +   
-          Number(clkdElt.parentElement.children[0].getAttributeNS(null, "width")) + 
-          munit * 2 + "px",
-          yPos: Number(clkdElt.parentElement.children[0].getAttributeNS(null, "y")) +
-          clkdElt.parentElement.transform.baseVal.getItem("translate").matrix.f + "px",
-          type: "sunSoil",
-          filter: [clkdElt.parentElement.getElementsByClassName("ulSun")[0].textContent.split(" ")[0].toLowerCase(),
-                   clkdElt.parentElement.getElementsByClassName("ulSoil")[0].textContent.split(" ")[0].toLowerCase()]
+          xPos: gnX + gnTX + gnW + munit * 2 + "px",
+          yPos: gnY + gnTY + "px",
+          type: tp,
+          filter: flt,
+          forPlant: fp,
+          gId: clkdElt.parentElement.id, 
+          gX: gnX,
+          gY: gnY,
+          gW: gnW,
+          gH: gnH
         });
       }
+
       else if (clkdElt.textContent === "Toggle all photos") {
         
         let gardenPlants = clkdElt.parentElement.getElementsByTagName("g");
         let sd = localStorage.getItem(
           "aas_myGardenVs_plnt" + gardenPlants[0].id.split("_")[1]).split(",");
-        let displayAll = Number(sd[9])
+        //if the photo is shown/size for the first plant in the garden
+        //set this displayAll to 1 (true), else 0 (false)
+        let displayAll = Number(sd[9])<2?1:0;
           
         for (let i = 0, len = gardenPlants.length; i < len; i++) {
           
-          sd = localStorage.getItem(
-            "aas_myGardenVs_plnt" + gardenPlants[i].id.split("_")[1]).split(",");
+          sd = localStorage.getItem("aas_myGardenVs_plnt" + gardenPlants[i].id.split("_")[1]).split(",");
 
           let specs = {
             x:Number(sd[0]),
             y:Number(sd[1]),
             w:Number(sd[2]),
             h:Number(sd[3]),
-            nm:sd[6]
+            nm:sd[6],
+            img:Number(sd[9])
           }
-          //size is hidden -> display it
-          if (displayAll < 2) {
+          //if display all, show size and photo, if it's available
+          if (displayAll) {
             //photo is available but hidden -> add it
-            if (displayAll === 1) {
+            if ([1,3].includes(specs.img)) {
               togglePlantLook(gardenPlants[i], specs, 1, 1);
             } 
             else {
               togglePlantLook(gardenPlants[i], specs, 1, 0);
             }
             //depending on whether img exists, update local storage to 0 or 1
-            displayAll === 0?updateStoredData(gardenPlants[i].id, "display", 2):updateStoredData(gardenPlants[i].id, "display", 3);
+            specs.img === 0?updateStoredData(gardenPlants[i].id, "display", 2):updateStoredData(gardenPlants[i].id, "display", 3);
           } 
           else {
             //size and photo (if exists) are shown -> hide them
             togglePlantLook(gardenPlants[i], specs, 0);
             //depending on whether img exists, update local storage to 0 or 1
-            displayAll===2?updateStoredData(gardenPlants[i].id, "display", 0):updateStoredData(gardenPlants[i].id, "display", 1);
+            specs.img === 2?updateStoredData(gardenPlants[i].id, "display", 0):updateStoredData(gardenPlants[i].id, "display", 1);
           }
         }
       }
@@ -1190,7 +1267,7 @@ function fauxUIDropDown(clkdElt, values, xOff=0, yDir=1) {
         x:(Number(clkdElt.getAttributeNS(null, "x"))+munit*2) + xOff, 
         //y position is incremented for each value added
         y:(Number(clkdElt.getAttributeNS(null, "y")) + 
-           yDir * munit * (3+i*2.5)),
+           yDir * munit * (3 + i * 3)),
         cls:"fauxLi" + " li" + clkdElt.classList[1].substr(
           2,clkdElt.classList[Array.from(clkdElt.classList).
                               findIndex(x=>x.includes("ul"))].length), 
@@ -1207,7 +1284,7 @@ function fauxUIDropDown(clkdElt, values, xOff=0, yDir=1) {
 
 //////////////////////////////////////////////////////////////////////
 //adds plant's look: photo and size, centered above the plant
-function togglePlantLook (grp, specs, showHide, wImg) {
+function togglePlantLook(grp, specs, showHide, wImg) {
   
   let halfPt = specs.x
     + Math.round((
@@ -1246,6 +1323,7 @@ function togglePlantLook (grp, specs, showHide, wImg) {
 //this function adds a plant to the garden, it's called by a click on li or onload
 //the plant consists of its name in color, plus size and photo, if chosen by user
 function addPlant(elt) {
+                 
   //if the id of elt (pId) is 0 then this is a new plant, as opposed to 
   //one loaded from localStorage; this new plant's pId needs to be set 
   //to either a 1 for a very first plant (when there is nothing in  
@@ -1264,6 +1342,12 @@ function addPlant(elt) {
       //record new plant id in the local storage plnts counter
       localStorage.aas_myGardenVs_plnts += ","+elt.pId.toString();
     }
+    //when a new plant is created, make sure it's not place outside of screen boundaries
+    if (elt.x < 0) {elt.x = 0;}
+//     if (elt.x > Number(svgPlace.getAttributeNS(null, "width"))) {
+//       elt.x = Number(svgPlace.getAttributeNS(null, "width")) - munit;} 
+    if (elt.y > Number(svgPlace.getAttributeNS(null, "height"))) {
+      elt.y = Number(svgPlace.getAttributeNS(null, "height")) - munit*1.5;}
     //record the new plant data in the local storage; 
     //until the color is changed, it's recorded as 0 to avoid storing what's not needed
     localStorage.setItem("aas_myGardenVs_plnt"+elt.pId, elt.x+","+elt.y+","+elt.w+","+elt.h+","
@@ -1294,15 +1378,17 @@ function addPlant(elt) {
   grp.setAttributeNS(null, "id", "p_"+elt.pId);
   grp.setAttributeNS(null, "class", "plantGrp");
   
+  //shorten the name to 15 characters
+  let shortenedName = elt.nm;
+  if (elt.nm.length > 15) {shortenedName = elt.nm.slice(0,14)+"...";}
   //create a text with plant's common name
-  let plantName = makeText({
+  grp.appendChild(makeText({
     x:elt.x, 
     y:elt.y, 
     cls:"plant", 
     clr:colorCoder(elt.clr),
-    txt:elt.nm, 
-    desc:elt.lnm});
-  grp.appendChild(plantName);
+    txt:shortenedName,
+    desc:elt.lnm}));
 
   //depending on img setting, call the function to add appropriate plant's look
   //if plant's elt img is set to 3, the photo is available and will be displayed
@@ -1315,7 +1401,8 @@ function addPlant(elt) {
       togglePlantLook(grp, elt, 1, 0);
     }
   }
-  
+ 
+  //return the group with the plant
   return grp;
   
 }
@@ -1452,8 +1539,6 @@ function makePic(specs) {
     null, 
     "href", 
     "pictures/" + specs.nm.replace(/( |-|\"|\'|v\.|\(|\)|-|&)/g,"")+"1.jpg"); //img address
-  //opacity is set so that if the plant's size is smaller than the picture it can still 
-  //be seen a little through the image; can be made conditional, todo: play with it  
   imgElem.setAttributeNS(null, "opacity", 0.85); 
   return imgElem;
 }
@@ -1566,6 +1651,9 @@ function dragging(evt) {
     evt.preventDefault();
     coord = getMousePosition(evt);
     
+    //remove any dropdown menus within the garden
+    hideDropDown()
+    
     //RESIZING
     if (resize) {
       
@@ -1576,12 +1664,7 @@ function dragging(evt) {
       let rect = clickedGroup.getElementsByTagName("rect")[0];
       
       //remove any dropdown menus within the garden
-      let fauxLis = clickedGroup.getElementsByClassName("fauxLi");
-      if (fauxLis.length) {
-        for (let i= 0; i < fauxLis.length; i++) {
-          clickedGroup.removeChild(fauxLis[i]);
-        }
-      }
+//       hideDropDown();
       
       //adjustments to width and height: the X and Y of the point of click/touch 
       //minus starting X and Y point of click
@@ -1592,10 +1675,10 @@ function dragging(evt) {
       let newW = Number(rect.getAttributeNS(null, "width"))+adjW;
       let newH = Number(rect.getAttributeNS(null, "height"))+adjH;
       
-      //the width & height can't be negative, and I don't want them less than minSize;
-      let minSize = 24;
-      if (newW < minSize*2) {
-        newW = minSize*2;
+      //the width & height can't be negative, and shouldn't be less than 6"x6";
+      let minSize = 6 * size;
+      if (newW < minSize) {
+        newW = minSize;
         adjW = 0;
       }
       if (newH < minSize) {
@@ -1996,7 +2079,7 @@ function dblTouch(evt, container) {
     let dropDownMenu = getUL(menu = {
       values:vals,
       xPos: (evt.pageX-5).toString()+"px",
-      yPos: (evt.pageY-40).toString()+"px",
+      yPos: (evt.pageY-40).toString()+"px"
     });
     dropDownMenu.addEventListener("click", function() {
       addGardenPlantUL();
