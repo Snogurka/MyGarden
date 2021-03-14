@@ -1,55 +1,60 @@
- /********** v.7.3 **********/
+/********** v.7.4.1 **********/
 /*to prevent zoom in safari and chrome, font-size has to be at least 16*/
 /********** database page styles **********/
 
 
-  /* TEXT AT THE BOTTOM OF THE PAGE, DESCRIBING NEW PLANT FUNCTIONALITY */
+/* text at the bottom of the page, describing new plant functionality */
 .addPlant {
   position: relative;
   bottom: 0;
   width: 100%;
 }
 
+/* eye button that allows toggling columns' display */
 #btnCustomCols {
   background: radial-gradient(#ffffcc 30%, rgba(255,255,255,0) 70%);
   display: none;
 }
 
+/* scissors button that allow clearing all the filters */
 #btnClearAllFilters {
+  top: 0;
   height: 2px;
   width: 2px;
   margin: 0;
   display: none;
 }
 
-  /* SMALL INNER BUTTONS  */
+/* small inner buttons: leaves, scissors, shovels, watering cans */
 .btnInner {
-  top: -5px;
+  top: -1px;
   position: absolute;
-  width: 3em;
+  width: 4em;
 	height: 3em;
   border-style: unset;
   background: transparent;
   z-index: 7;
 }
-.btnImg { /* image within inner buttons */
+/* image within inner buttons */
+.btnImg { 
   width: 2em;
   height: 2em;
 }
+/* placing the buttons on the left, used  */
 .btnLeft {
   left: -5px;
 }
 .btnRight {
-  right: -5px;
+  right: 0;
 }
 
-  /*  SMALL INNER BUTTONS FOR ADDING & MODIFYING PLANTS BY USER */
+/* small inner buttons for adding and modifying user added plants */
 #btnNewPlantAdd, #btnNewPlantClear, #btnNewPlantCopy, #btnNewPlantSubmit {
   position: absolute;
   background: transparent;
   top: 100%;
   width: 3em;
-  height: 2em;
+  height: 3em;
   border-style: unset;
   display: none;
 }
@@ -63,7 +68,6 @@
   left: 0;
   display: initial;
 }
-/* user added plant - plant names drop down */
 #btnNewPlantCopy ~ .dropUnqVals {
   top: 115%;
   left: 0;
@@ -72,19 +76,23 @@
   left: 50%;
 }
 
-.btnUpdatePlant { /*button for recording changes within notes, action, quantity*/
+/* button for recording changes within notes, action, quantity */
+.btnUpdatePlant { 
   top: 0;
   background: rgba(178, 246, 23, 0.5);
 }
 
 .colWidth1 {
-  width: 8em;
+  width: 6em;
 }
 .colWidth2 {
+  width: 9em;
+}
+.colWidth3 {
   width: 12em;
 }
 
-/* EXPORT/IMPORT WINDOW */
+/* export/import window */
 div.expImp > button {
   top: 1px;
   padding: 10px;
@@ -102,12 +110,6 @@ div.expImp {
   opacity: 0.9;
   border: 1px solid #001539;
   box-shadow: 3px 3px #00179d;
-  background-color: rgb(255, 251, 244);
-}
-
-div.expImp > textarea {
-  padding: 5px ;
-  border: 1px solid #001539;
   background-color: rgb(255, 251, 244);
 }
 
@@ -141,7 +143,7 @@ div.expImp > textarea {
   overflow: auto;
 }
 
-/* COMMON NAME COLUMN, FREEZING STYLE, ENSURES THAT PLANT NAMES ARE ALWAYS SHOWN */
+/* common name column, freezing style, ensures that plant names are always shown */
 .frozenCol {
   position: sticky;
   position: -webkit-sticky;
@@ -156,7 +158,7 @@ div.expImp > textarea {
   font-style: italic;
 }
 
-/* FILTER ROW FREEZING STYLE, ENSURES THAT FILTER ROW IS FROZEN AND ALWAYS SHOWN ON TOP */
+/* filter row freezing style, ensures that filter row is frozen and always shown on top */
 .frozenFilterRow {
   position: sticky;
   position: -webkit-sticky;
@@ -164,7 +166,7 @@ div.expImp > textarea {
   background-color: rgba(0, 0, 128, 1);
   z-index: 2;
 }
-/* THE COMMON NAME (FIRST COLUMN) OF THE FILTER FREEZE IS DONE SEPARATELY */
+/* the common name (first column) of the filter freeze is done separately */
 .filterFreeze {
   position: sticky;
   position: -webkit-sticky;
@@ -180,6 +182,10 @@ div.expImp > textarea {
   width: 100%;
   height: 100%;
 }
+.filterInput:focus {
+  font-size: 16px;
+}
+
 .frozenFilterRow tr:hover {
   background-color: rgba(0, 0, 128, 1);
 }
@@ -188,7 +194,7 @@ i:hover {
   cursor: pointer;
 }
 
-/* IMAGES - SETTINGS FOR THE LAST COLUMN, ALL THE WAY TO THE RIGHT */
+/* images - settings for the last column, all the way to the right */
 img {
   width: 4em;
   border: 0;
@@ -204,7 +210,7 @@ img {
   right: 0;
 }
 
-/* THE NEW PLANT ROW IS LOCATED AT THE BOTTOM OF THE TABLE */
+/* the new plant row is located at the bottom of the table */
 #newPlantRow {
   background-color: rgba(255, 255, 255, 0.5);
   visibility: hidden;
@@ -235,7 +241,7 @@ img {
   color: white;
 }
 
-/* TABLE plants SETTINS */
+/* plants table settings */
 #plants {
   table-layout: fixed;
   position: relative;
@@ -247,32 +253,59 @@ img {
   margin: 0 0 5em 0;
 }
 
-#plants td, #plants th {
+td, th {
   border: 1px solid #ddd;
   padding: 5px;
   white-space: normal;
+  font-size: 16px;
+/*   overflow-x: hidden; - doing so hides the new plant buttons; move those buttons out of the td first*/
 }
 
-/* TABLE HEADERS STYLE SETTINGS AND FREEZING */
-#plants th {
+/* table headers style settings and freezing */
+th {
   position: sticky;
   position: -webkit-sticky;
   top: 2.5em;
-  padding: 4px 10px 4px 4px;
+  padding: 4px 10px;
   text-align: left;
   color:#ffffcc;
   background-color: rgba(0, 0, 128, 1);
   z-index: 2;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 
-#plants th > i {
+th > i {
   position: absolute;
   right: 1px;
   opacity: 0.7;
+  font-size: 150%;
 }
 
-#plants tr:nth-child(even) {
+tr:nth-child(even) {
   background-color: rgba(208, 218, 225, 0.5);
+}
+
+/* resizable class currently only applies to common name column */
+.resizable {
+  top: 5px; 
+  right: 0px; 
+  width: 15px;
+  height: 15px;
+  border-top: 10px solid transparent;
+  border-left: 10px solid rgba(255, 255, 204, 0.7);
+  border-bottom: 10px solid transparent;
+  position: absolute; 
+}
+.resizable:hover {
+  cursor: pointer;
+}
+
+/* export/import text area - needed? */
+textarea {
+  padding: 5px ;
+  border: 1px solid #001539;
+  background-color: rgb(255, 251, 244);
 }
 
 /* 
