@@ -1,31 +1,4 @@
-/********** v.7.3.1 **********/
-/* 
-TODO:
- # fixed: 
-  - filtering - don't show values that are excluded by columns, other than clicked
-  - fixed various filtering issues, replaced *** with ... 
-  - reveresed time-related drop downs, better to filter by values, like it was
-
- # issues: 
-  - editable columns & added plants: tab in/out of the window, undos etc. need attention
-  - filters - shows only first letter on reload?
-  
- # improvements:
-  - add season column for when the plant is present in the garden
-  - add upload image functionality
-  - add functionality to allow users to submit their changes and additions to be added to the main db
-  - see if sorting can be reworked to speed it up
- maybe:
-  - animate the appearance of a photos for gallery
-  - make inner buttons (drop down, upload, delete) into shapes - need a more efficient way
-  - filtering: show unavailable choices but in gray and not selectable
- # optimization strategies:
-  -- rework the barView buttons by adding a fork function and maybe get rid of jquery
-  -- mobile first
-  -- minimize the use of event handlers
-  -- eliminate unnecessary tags such as <div> and <span>
-  -- minimize the use of document.getElementBy...
-*/
+/********** v.7.4.1 **********/
 
 /* #################
    ### IMPORTANT ###
@@ -37,23 +10,19 @@ TODO:
  - & appendPlantToTable() as well as visual.js code accordingly
 */
 
-//////////////////////////////////////////////////////////////////////
-// this function is called from html file on window load to 
-// - add data to the table 
-// - call other functions to check local storage for user added plants; 
-// - check session storage for filtered plants and hidden columns
-
   var table = document.getElementById("plants");
   var addedRowCounter = []; //used for accessing added plants, a unique number for each
   var latinNamesAdded = []; //stores the latin names of added plants to avoid storing duplicates
-  //TODO: delete markedPlant?
-//   var markedPlant; //stores the id of plant and of table row that needs to be deleted or modified; 
-  //needs to be a compound ID so it's distinctive
   var filters = {}; //filters{} is a global var to support filtering multiple columns; 
   var newRow = null;
   var arrHeaders = [];
   window.onload = main();
 
+//////////////////////////////////////////////////////////////////////
+// this function is called from html file on window load to 
+// - add data to the table 
+// - call other functions to check local storage for user added plants; 
+// - check session storage for filtered plants and hidden columns
 function main() {
 
   let objNotes = null,
@@ -82,14 +51,21 @@ function main() {
       //build the HEADERS row
       //latin name is the key, common name - 1st value index 0, notes - 2nd index 1, etc.
       txt += "<tr title='Click to Sort'>";
+      
       for (let i = 0; i < l; i++) {
         //record column names in a var, replacing html nonbreaking space with js one
         arrHeaders.push(myObj[k][i].replaceAll("&nbsp","\xa0"));      
         if (i === 0) {
           //latin name is added separately, cuz it is the key; it only needs to be done once, thus here
           arrHeaders.push(k.replaceAll("&nbsp","\xa0"));
+          
           //common name column header
           txt += `<th class='frozenCol colWidth2' style='z-index:3;'>${myObj[k][i]}`;
+          //add resizing functionality to the common name column
+          txt += "<div class='resizable' onmousedown='touchDown()' ";
+          txt += "onmouseup='touchUp()'></div>";
+          txt += "</th>";
+          
           //latin name column header
           txt += `<th class='colWidth2'>${k}`;
         }
@@ -97,15 +73,15 @@ function main() {
         else if ([2, 3, 4, 5, 6, 7, 10, 11, 14, 15, 19, 22, 28, 29].includes(i)){
           txt += `<th class='colWidth1'>${myObj[k][i]}`;
         }        
-        //med size column headers, colWidth2
+        //large size column headers, colWidth3
         else if ([1, 8, 9, 12, 13, 16, 17, 18, 20, 21, 23, 24, 25, 26, 27].includes(i)){
-          txt += `<th class='colWidth2'>${myObj[k][i]}`;
+          txt += `<th class='colWidth3'>${myObj[k][i]}`;
         }
         //headers for all other columns, which there shouldn't be any at this point
         else {
           txt += `<th>${myObj[k][i]}`;
         }
-        //add an eye icon to each 
+        //add an eye icon to each (except common name, it can be resized instead)
         txt += "<i class='fas fa-eye'></i></th>"
       }
       txt += "</tr>";
@@ -144,10 +120,10 @@ function main() {
       
       //build the REST OF THE TABLE
       //loop through every row object of data returned from JSON as myObj
-      //in the myObj, latin name(x) is the key, common name is ind 0, etc.
+      //in the myObj, latin name(x) is the key, common name is ind 0, note is 1, etc.
       for (let x in myObj) {
         
-        //add data row <tr> and place a <td> with common name in it; 
+        //add data row <tr> and place a <td> with COMMON NAME in it; 
         txt += "<tr><td class='frozenCol'>" + myObj[x][0] + "</td>"; 
         
         //if the local storage is available, pull Notes, In Garden, if those exist
@@ -172,7 +148,7 @@ function main() {
           }
         }
 
-        //loop through the array of objects (rows) in JSON object 
+        //loop through the array of objects in JSON object - these become table rows
         for (let i = 0; i < l; i++) {
           switch (i) {
             //Latin Name
@@ -180,8 +156,8 @@ function main() {
               txt += "<td>" + x + "</td>";
               break;
             case 1:
-              //store the length of existing notes in notesLen attribute, used to 
-              //capture just the user added notes in local storage
+              //store the length of existing notes in notesLen attribute, 
+              //used to capture just the user added notes in local storage
               txt += "<td contenteditable=true notesLen='" + myObj[x][i].length + "'>";
               //objNotes - all Notes in local storage
               if (objNotes) {
@@ -287,18 +263,17 @@ function main() {
             //min/max height and width support
             if (filters[i][">"]) {
               table.children[0].children[1].children[i].children[0].value =
-              filters[i][">"] +
-              "-" +
-              filters[i]["<"];
+              filters[i][">"] + "-" + filters[i]["<"];
               filterData();
             }
             else {
               //if more than filter choice
               if (Array.isArray(filters[i]) && filters[i].length > 1) {
                 table.children[0].children[1].children[i].children[0].value = "...";
-                
-              } else {
-                table.children[0].children[1].children[i].children[0].value = filters[i][0].toLowerCase();
+                } 
+              //else, if one filter choice
+              else {
+                table.children[0].children[1].children[i].children[0].value = filters[i].toLowerCase();
               }
               filterData();
             }
@@ -339,6 +314,48 @@ function main() {
   }
   xhr.open("GET", "plants.json", true);
   xhr.send("x=" + JSON.stringify({table: "plants"}));
+}
+
+//////////////////////////////////////////////////////////////////////
+//resizing columns
+
+var pageX, curCol, curColWidth;
+
+function touchDown() {
+  let tgt = event.target;
+  curCol = tgt.parentElement;
+  pageX = event.pageX;
+
+  let padding = paddingDiff(curCol);
+  curColWidth = curCol.offsetWidth - padding;
+
+  function paddingDiff(col){
+    if (getStyleVal(col,'box-sizing') == 'border-box'){
+      return 0;
+    }
+    return (parseInt(getStyleVal(col,'padding-left')) + parseInt(getStyleVal(col,'padding-right')));
+  }
+   
+  function getStyleVal(elm,css){
+     return (window.getComputedStyle(elm, null).getPropertyValue(css));
+   }
+}
+
+function resizeCol() {
+  if (!curCol) return;
+  if (curCol) {
+    let diffX = event.pageX - pageX;
+    if ((curColWidth + diffX) < 75) {
+      diffX = 75 - curColWidth;
+    }
+    curCol.style.width = (curColWidth + diffX)+'px';
+  }  
+}
+
+function touchUp() {
+   curCol = undefined;
+   pageX = undefined;
+   curColWidth = undefined;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1344,9 +1361,8 @@ function displayColumns(tgt) {
       break;
     case "Full":
     default:
-      //for full view, display all columns, thus unhide those that are hidden
+      //unhide hidden columns
       showColName = sessionStorage.hiddenColumns.split(",");
-      showColName.push('Common\xa0Name');
       break;
     }
   
@@ -1354,7 +1370,7 @@ function displayColumns(tgt) {
   //columns only, full view (default) is not recorded; not using
   //storeHiddenCol() here, as it's easier to overwrite stored entry
   for (let i = 0, len = arrHeaders.length; i < len; i++) {
-    if (showColName.includes(arrHeaders[i])) {
+    if (showColName.includes(arrHeaders[i]) || tgt.innerText === "Full") {
       customColumnDisplay(i, true);
     } else {
       customColumnDisplay(i, false);
@@ -1462,8 +1478,6 @@ function cleanView() {
 // - update and delete inner buttons of user added plants x3
 function allClicks(e) {
 
-//   console.log(e.type + ", " +e.keyCode);
-//   console.log(e.detail);
   let tgt = e.target;
   tgt.className==="btnImg"?tgt=tgt.parentElement:tgt;
     
