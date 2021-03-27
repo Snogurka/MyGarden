@@ -1,6 +1,7 @@
-/********** v.7.4.1 **********/
-/* this css file contains styles shared by all garden pages */
-/* units
+/********** v.7.4.2 **********/
+/* this css file contains styles shared by all garden pages
+
+   units:
    1in = 72pt
    1in = 96px
 	 1em is equal to the current font size
@@ -98,26 +99,27 @@ button {
   cursor: pointer;
 }
 
-/* h1 styling is applied to the name of the page in the nav bar */
+/* h1 styling is used for the page name in the nav bar */
 /* mobile, see @media for desktop */
 h1 {
-  font-size: 150%;
-  z-index: 5;
   position: fixed;
-  width: 50%;
-  margin: 0.25em 25%;
+  width: 100%;
+/*   margin: 0 35%; */
+  font-size: 100%;
+  white-space: nowrap;
   color: #ffffcc;
 /* don't allow selection, so that user can drag objects on visual tab without selecting the title */
   -webkit-user-select: none; /* Safari */        
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE10+/Edge */
   user-select: none; /* Standard */
+  z-index: 5;
 }
 
 @media only screen and (min-width: 768px) {
   h1 {
-    width: 30%;
-    margin: 0.25em 35%;
+    margin: 0;
+    font-size: 200%;
   }
 }
 
