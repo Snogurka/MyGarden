@@ -1,4 +1,4 @@
-/********** v.7.4.1 **********/
+/********** v.7.4.2 **********/
 
 /* #################
    ### IMPORTANT ###
@@ -55,26 +55,74 @@ function main() {
       for (let i = 0; i < l; i++) {
         //record column names in a var, replacing html nonbreaking space with js one
         arrHeaders.push(myObj[k][i].replaceAll("&nbsp","\xa0"));      
+
+        //latin name is added separately cuz it's the key and only needs to be added
+        //once, thus it's here, combined with common name
         if (i === 0) {
-          //latin name is added separately, cuz it is the key; it only needs to be done once, thus here
+          //replace nbsp for latin name value
           arrHeaders.push(k.replaceAll("&nbsp","\xa0"));
           
-          //common name column header
+          //Common Name column header
           txt += `<th class='frozenCol colWidth2' style='z-index:3;'>${myObj[k][i]}`;
-          //add resizing functionality to the common name column
-          txt += "<div class='resizable' onmousedown='touchDown()' ";
-          txt += "onmouseup='touchUp()'></div>";
+          //add resizing support to the common name column
+          txt += "<div class='resizable' onmousedown='touchDown()' ontouchstart='touchDown()'>";
+          txt += "</div>";
           txt += "</th>";
           
-          //latin name column header
+          //Latin Name column header
           txt += `<th class='colWidth2'>${k}`;
         }
-        //the narrowest column headers, colWidth1
-        else if ([2, 3, 4, 5, 6, 7, 10, 11, 14, 15, 19, 22, 28, 29].includes(i)){
+        
+        //Notes column header - add unique title, column width is wide
+        else if (i === 1){
+          txt += `<th class='colWidth3' title='This column is editable.'>${myObj[k][i]}`;
+        }
+        
+        //Action column header - add unique title, column width is narrow
+        else if (i === 2){
+          txt += `<th class='colWidth1' title='This column is editable.'>${myObj[k][i]}`;
+        }
+        
+        //Leaves column header - add unique title, column width is narrow
+        else if (i === 7){
+          txt += `<th class='colWidth1' title='Semi-evergreen keeps its leaves through winter in warmer climates. Annuals reseed every year, while perennials are like decidious and loose their leaves in winter, then come back in spring.'>${myObj[k][i]}`;
+        }
+        
+        //Sun column header - add unique title, column width is narrow
+        else if (i === 10){
+          txt += `<th class='colWidth1' title='Full: 6 or more hours of sun a day, part sun or part shade: 3-6 hours a day, shade: less than 3 hours of sun.'>${myObj[k][i]}`;
+        }
+        
+        //'In Garden' column header - add unique title, column width is medium
+        else if (i === 12){
+          txt += `<th class='colWidth2' title='This column is editable.'>${myObj[k][i]}`;
+        }
+        
+        //Soil column header - add unique title, column width is narrow
+        else if (i === 19){
+          txt += `<th class='colWidth1' title='Soil pH: circumneutral - near neutral, ph 6.8-7.2, acidic - below 6.8, alkaline - above 7.2. Moisture: hydric - abundant, mesic - moderate, xeric - dry.'>${myObj[k][i]}`;
+        }
+        
+        //'When To Plant' column header - add unique title, column width is medium
+        else if (i === 21){
+          txt += `<th class='colWidth2' title='In NC, first frost is in early Nov, last frost is in early Mar.'>${myObj[k][i]}`;
+        }
+        
+        //'Days To' column header - add unique title, column width is medium
+        else if (i === 22){
+          txt += `<th class='colWidth2' title='Days To... g: germination, h: harvest, m: maturity.'>${myObj[k][i]}`;
+        }
+        
+        //narrow column headers, colWidth1
+        else if ([3, 4, 5, 6, 7, 11, 14, 15, 28, 29].includes(i)){
           txt += `<th class='colWidth1'>${myObj[k][i]}`;
-        }        
-        //large size column headers, colWidth3
-        else if ([1, 8, 9, 12, 13, 16, 17, 18, 20, 21, 23, 24, 25, 26, 27].includes(i)){
+        }
+        //medium size column headers, colWidth2
+        else if ([8, 9, 13, 17, 18, 24, 26, 27].includes(i)){
+          txt += `<th class='colWidth2'>${myObj[k][i]}`;
+        }
+        //wide column headers, colWidth3
+        else if ([16, 20, 23, 25].includes(i)){
           txt += `<th class='colWidth3'>${myObj[k][i]}`;
         }
         //headers for all other columns, which there shouldn't be any at this point
@@ -82,7 +130,7 @@ function main() {
           txt += `<th>${myObj[k][i]}`;
         }
         //add an eye icon to each (except common name, it can be resized instead)
-        txt += "<i class='fas fa-eye'></i></th>"
+        txt += "<i title='Hide this column' class='fas fa-eye'></i></th>"
       }
       txt += "</tr>";
       
@@ -93,7 +141,7 @@ function main() {
         if (i === 0) {
           //"filterFreeze" is a filter cell for the common name column only
           txt += "<td class='filterFreeze'> " + 
-            "<input type='text' class='filterInput' placeholder='filter by ...'> " + 
+            "<input autocorrect='off' type='text' class='filterInput' placeholder='filter by ...'> " + 
             "<button class='btnInner btnLeft' title='Filter by " + myObj[k][0].replace("&nbsp"," ") +  "'> " + 
             "<img class='btnImg' src='pictures/btnLeafDown.png' border=0></button></td>";
         }
@@ -267,13 +315,13 @@ function main() {
               filterData();
             }
             else {
-              //if more than filter choice
+              //if more than one filter choice
               if (Array.isArray(filters[i]) && filters[i].length > 1) {
                 table.children[0].children[1].children[i].children[0].value = "...";
                 } 
               //else, if one filter choice
               else {
-                table.children[0].children[1].children[i].children[0].value = filters[i].toLowerCase();
+                table.children[0].children[1].children[i].children[0].value = filters[i].toString().toLowerCase();
               }
               filterData();
             }
@@ -322,6 +370,7 @@ function main() {
 var pageX, curCol, curColWidth;
 
 function touchDown() {
+  event.preventDefault();
   let tgt = event.target;
   curCol = tgt.parentElement;
   pageX = event.pageX;
@@ -1223,7 +1272,7 @@ function getUnqVals(forCell) {
   //all other, non-size, columns
   else {
     let tr = table.getElementsByTagName("tr");
-    //the array rUnqVals will hold unique values from the given column
+    //the array rUnqVals holds unique values from the given column
     let rUnqVals = [];
     loopTableRows:
     for (let i = 2, l = tr.length - 2; i < l; i++) {
@@ -1244,7 +1293,8 @@ function getUnqVals(forCell) {
               continue; //next filter
             }
             //exclude values that are filtered out for other columns
-            if (!filters[key].includes(tr[i].children[key].textContent.toUpperCase())) {
+            if (!filters[key].includes(tr[i].children[key].textContent.toUpperCase())
+            && !tr[i].children[key].textContent.toUpperCase().includes(filters[key])) {
               continue loopTableRows;
             }
           }
@@ -1475,7 +1525,7 @@ function cleanView() {
 //////////////////////////////////////////////////////////////////////
 //this function is triggered by a click or key entry anywhere on the page;
 //it handles all events/functionality except: 
-// - update and delete inner buttons of user added plants x3
+// - update and delete inner buttons of user added plant buttons x3
 function allClicks(e) {
 
   let tgt = e.target;
