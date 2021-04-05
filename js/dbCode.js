@@ -1,4 +1,9 @@
-/********** v.7.4.2 **********/
+/********** v.7.4.3 **********/
+/*
+DONE:
+ - changed from XmlHttpRequest to fetch promise
+ - common name column resizing - mobile test
+*/
 
 /* #################
    ### IMPORTANT ###
@@ -16,396 +21,349 @@
   var filters = {}; //filters{} is a global var to support filtering multiple columns; 
   var newRow = null;
   var arrHeaders = [];
+  //resizing columns
+  var pageX, curCol, curColWidth;
+
   window.onload = main();
 
 //////////////////////////////////////////////////////////////////////
-// this function is called from html file on window load to 
-// - add data to the table 
-// - call other functions to check local storage for user added plants; 
-// - check session storage for filtered plants and hidden columns
+// this function is called from html file on window load to pull data from plant.json file
 function main() {
-
-  let objNotes = null,
-      objAction = null,
-      objInGarden = null;
-
-  //XMLHttpRequest to pull the data from JSON file
-  if (window.XMLHttpRequest) {
-    xhr = new XMLHttpRequest();
-  } else {
-    xhr = new ActiveXObject("Microsoft.XMLHTTP");
-  }
-
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4) {
-      // && xhr.status == 200)
-      //myObj holds the contents of JSON file
-      let myObj = JSON.parse(xhr.responseText);
-      //start the text string to contain the body of the html table
-      let txt = "<tbody>";
-      //l = number of columns
-      let l = myObj[Object.keys(myObj)[0]].length;
-      //k = Latin Name, the name of the key column in headers (first) JSON object entry 
-      let k = Object.keys(myObj)[0];
-      
-      //build the HEADERS row
-      //latin name is the key, common name - 1st value index 0, notes - 2nd index 1, etc.
-      txt += "<tr title='Click to Sort'>";
-      
-      for (let i = 0; i < l; i++) {
-        //record column names in a var, replacing html nonbreaking space with js one
-        arrHeaders.push(myObj[k][i].replaceAll("&nbsp","\xa0"));      
-
-        //latin name is added separately cuz it's the key and only needs to be added
-        //once, thus it's here, combined with common name
-        if (i === 0) {
-          //replace nbsp for latin name value
-          arrHeaders.push(k.replaceAll("&nbsp","\xa0"));
-          
-          //Common Name column header
-          txt += `<th class='frozenCol colWidth2' style='z-index:3;'>${myObj[k][i]}`;
-          //add resizing support to the common name column
-          txt += "<div class='resizable' onmousedown='touchDown()' ontouchstart='touchDown()'>";
-          txt += "</div>";
-          txt += "</th>";
-          
-          //Latin Name column header
-          txt += `<th class='colWidth2'>${k}`;
-        }
-        
-        //Notes column header - add unique title, column width is wide
-        else if (i === 1){
-          txt += `<th class='colWidth3' title='This column is editable.'>${myObj[k][i]}`;
-        }
-        
-        //Action column header - add unique title, column width is narrow
-        else if (i === 2){
-          txt += `<th class='colWidth1' title='This column is editable.'>${myObj[k][i]}`;
-        }
-        
-        //Leaves column header - add unique title, column width is narrow
-        else if (i === 7){
-          txt += `<th class='colWidth1' title='Semi-evergreen keeps its leaves through winter in warmer climates. Annuals reseed every year, while perennials are like decidious and loose their leaves in winter, then come back in spring.'>${myObj[k][i]}`;
-        }
-        
-        //Sun column header - add unique title, column width is narrow
-        else if (i === 10){
-          txt += `<th class='colWidth1' title='Full: 6 or more hours of sun a day, part sun or part shade: 3-6 hours a day, shade: less than 3 hours of sun.'>${myObj[k][i]}`;
-        }
-        
-        //'In Garden' column header - add unique title, column width is medium
-        else if (i === 12){
-          txt += `<th class='colWidth2' title='This column is editable.'>${myObj[k][i]}`;
-        }
-        
-        //Soil column header - add unique title, column width is narrow
-        else if (i === 19){
-          txt += `<th class='colWidth1' title='Soil pH: circumneutral - near neutral, ph 6.8-7.2, acidic - below 6.8, alkaline - above 7.2. Moisture: hydric - abundant, mesic - moderate, xeric - dry.'>${myObj[k][i]}`;
-        }
-        
-        //'When To Plant' column header - add unique title, column width is medium
-        else if (i === 21){
-          txt += `<th class='colWidth2' title='In NC, first frost is in early Nov, last frost is in early Mar.'>${myObj[k][i]}`;
-        }
-        
-        //'Days To' column header - add unique title, column width is medium
-        else if (i === 22){
-          txt += `<th class='colWidth2' title='Days To... g: germination, h: harvest, m: maturity.'>${myObj[k][i]}`;
-        }
-        
-        //narrow column headers, colWidth1
-        else if ([3, 4, 5, 6, 7, 11, 14, 15, 28, 29].includes(i)){
-          txt += `<th class='colWidth1'>${myObj[k][i]}`;
-        }
-        //medium size column headers, colWidth2
-        else if ([8, 9, 13, 17, 18, 24, 26, 27].includes(i)){
-          txt += `<th class='colWidth2'>${myObj[k][i]}`;
-        }
-        //wide column headers, colWidth3
-        else if ([16, 20, 23, 25].includes(i)){
-          txt += `<th class='colWidth3'>${myObj[k][i]}`;
-        }
-        //headers for all other columns, which there shouldn't be any at this point
-        else {
-          txt += `<th>${myObj[k][i]}`;
-        }
-        //add an eye icon to each (except common name, it can be resized instead)
-        txt += "<i title='Hide this column' class='fas fa-eye'></i></th>"
-      }
-      txt += "</tr>";
-      
-      //build the FILTERS row
-      txt += "<tr>";
-      for (let i = 0; i <= l; i++) {
-        //common name column
-        if (i === 0) {
-          //"filterFreeze" is a filter cell for the common name column only
-          txt += "<td class='filterFreeze'> " + 
-            "<input autocorrect='off' type='text' class='filterInput' placeholder='filter by ...'> " + 
-            "<button class='btnInner btnLeft' title='Filter by " + myObj[k][0].replace("&nbsp"," ") +  "'> " + 
-            "<img class='btnImg' src='pictures/btnLeafDown.png' border=0></button></td>";
-        }
-        //if the last column, picture, don't need the drop down filtering button
-        else if (i === (l)) {
-          txt += "<td class='frozenFilterRow'></td>";
-        }
-        //all other columns
-        else {
-          txt += "<td class='frozenFilterRow'><input type='text' class='filterInput'> ";
-          if (i === 1) {
-            txt += "<button class='btnInner btnLeft' title='Filter by " + k.replace("&nbsp"," ") +  "'>";
-          } 
-          else {
-            txt += "<button class='btnInner btnLeft' title='Filter by " + myObj[k][i-1].replace("&nbsp"," ") +  "'>";
-          }
-          txt += "<img class='btnImg' src='pictures/btnLeafDown.png' 'border=0'></td>";
-        }
-      }
-      txt += "</tr>";
-      //remove the headers from myObj, since the headers are now recorded 
-      //and it's not needed for looping through data rows
-      delete myObj[k];
-      
-      //build the REST OF THE TABLE
-      //loop through every row object of data returned from JSON as myObj
-      //in the myObj, latin name(x) is the key, common name is ind 0, note is 1, etc.
-      for (let x in myObj) {
-        
-        //add data row <tr> and place a <td> with COMMON NAME in it; 
-        txt += "<tr><td class='frozenCol'>" + myObj[x][0] + "</td>"; 
-        
-        //if the local storage is available, pull Notes, In Garden, if those exist
-        if (typeof (Storage) !== "undefined") {
-          try {
-            objNotes = JSON.parse(localStorage.aas_myGardenDb_Notes);
-          } 
-          catch (error) {
-            //no Notes in local storage, no problem
-          }
-           try {
-            objAction = JSON.parse(localStorage.aas_myGardenDb_Action); //if stored data is corrupted
-          }
-          catch (error) {
-            //no Action in local storage, no problem
-          }
-          try {
-            objInGarden = JSON.parse(localStorage.aas_myGardenDb_InGarden);
-          }
-          catch (error) {
-            //no In Garden in local storage, no problem
-          }
-        }
-
-        //loop through the array of objects in JSON object - these become table rows
-        for (let i = 0; i < l; i++) {
-          switch (i) {
-            //Latin Name
-            case 0:
-              txt += "<td>" + x + "</td>";
-              break;
-            case 1:
-              //store the length of existing notes in notesLen attribute, 
-              //used to capture just the user added notes in local storage
-              txt += "<td contenteditable=true notesLen='" + myObj[x][i].length + "'>";
-              //objNotes - all Notes in local storage
-              if (objNotes) {
-                //if there is an entry in local storage for the plant
-                if (objNotes[x]) {
-                  txt += myObj[x][i] + " " + objNotes[x];
-                } else {
-                  txt += myObj[x][i];
-                }
-              } else {
-                txt += myObj[x][i];
-              }
-              break;
-            //Action, only load user's saved
-            case 2:
-              txt += "<td contenteditable=true>";
-              //objAction - all Action in local storage
-              if (objAction) {
-                if (objAction[x]) {
-                  txt += objAction[x];
-                } else {
-                  txt += myObj[x][i];
-                }
-              }
-              break;
-            //In Garden field, only load user's saved
-            case 12:
-              txt += "<td contenteditable=true>";
-              //objInGarden - all In Garden in local storage
-              if (objInGarden) {
-                if (objInGarden[x]) {
-                  txt += objInGarden[x];
-                } else {
-                  txt += myObj[x][i];
-                }
-              }
-              txt += "</td>";
-              break;
-            //Photo: if value in source file is not 0 then a photo is present: perform, 
-            //a lazy load, record the value indicating how many photos are available
-            //for the plant, set the source based on the common name with .jpg
-            //extension, set the alternative text using the common name
-            case (l-1):
-              if (myObj[x][i] === "0") {
-                txt += "<td><img src='pictures/btnCog.png' " 
-                  + "alt='" + myObj[x][0] + "'"
-                  + "></td>";
-              } else {
-                txt += "<td loading='lazy'>"
-                  + "<img class='pic' " 
-                  + "value = '" + myObj[x][i] + "' "
-                //remove spaces, dashes, quotes, v., (), & from the plants' names
-                  + "src='pictures/" + myObj[x][0].replace((/( |-|\(|\)|v\.|&|\"|\')/g),"") + "1.jpg' " 
-                  + "alt='" + myObj[x][0] + "' "
-                //saving some good code to handle errors in images
-//                   + "onerror='this.onerror=null; this.src=\"pictures/btnCog.png\"' "
-                  +"></td>";
-              }
-              break;
-            //All other columns
-            default:
-              txt += "<td>" + myObj[x][i] + "</td>";
-              break;
-          }
-        }
-        txt += "</tr>";
-      }
-      //add NEW PLANT ROW, used for entering new plants
-      txt += "<tr id='newPlantRow' contenteditable=true>"//blank cell <td> for the latin name
-      //blank cell for common name is special, containing a div/text plus editing buttons
-      txt += "<td class='frozenCol'><div contenteditable=true></div>"
-      txt += "<button id='btnNewPlantCopy' class='btnInner btnLeft' title='Copy an existing plant to modify and add a new entry'>"
-        txt += "<img class='btnImg' src='pictures/btnLeafDown.png'></button>"
-      txt += "<button id='btnNewPlantClear' class='btnInner' title='Clear this row'>"
-        txt += "<img class='btnImg' src='pictures/btnCut.png'></button>"
-//         txt += "<i class='fas fa-cut'></i></button>"
-//       txt += "<button id='btnNewPlantSubmit' class='btnInner' title='Request addition of your plant to the database'>"
-//         txt += "<img class='btnImg' src='pictures/btnShovel.png'></button>"
-      txt += "<button id='btnNewPlantAdd' class='btnInner' title='Add your new plant'>"
-        txt += "<img class='btnImg' src='pictures/btnShovel.png'></button>"
-      txt += "</td>";
-      //remaining blank cells for all columns other than common name (above) and picture (below)
-      for (let i = 1; i < l; i++) {
-        txt += "<td></td>";
-      }
-      //blank cell for the picture cell
-      txt += "<td title='The upload image functionality is not yet available'>image</td></tr>"
-      txt += "</tbody>"
-      txt += "</table>"
-      table.innerHTML += txt;
-
-      //if storage is available, add storage features and retrieve
-      //session variables: filered rows and hidden columns
-      if (typeof (Storage) !== "undefined") {
-	      
-        addStorageFeatures();
-        
-        //if data has been filtered in this session and filters are stored in session storage, 
-        //retrieve them and filter the table rows
-        if (sessionStorage.filters) {
-          filters = JSON.parse(sessionStorage.filters);
-          for (i in filters) {
-            //min/max height and width support
-            if (filters[i][">"]) {
-              table.children[0].children[1].children[i].children[0].value =
-              filters[i][">"] + "-" + filters[i]["<"];
-              filterData();
-            }
-            else {
-              //if more than one filter choice
-              if (Array.isArray(filters[i]) && filters[i].length > 1) {
-                table.children[0].children[1].children[i].children[0].value = "...";
-                } 
-              //else, if one filter choice
-              else {
-                table.children[0].children[1].children[i].children[0].value = filters[i].toString().toLowerCase();
-              }
-              filterData();
-            }
-            addClearingBtn(table.children[0].children[1].children[i]);
-          }
-        }
-        
-        //creating the column drop down menu, used in custom view
-        addDropDown("dropColNames", arrHeaders);
-        
-        //adding export/import menu sub choices here just to keep it together
-        //the Export/Import are separated from the rest of the choice name by no space 
-        //on purpose, this is used later in code, the rest needs to not be \xa0
-        addDropDown("dropExportImport",
-        ["Export\xa0Notes", "Export\xa0Action", "Export\xa0In Garden", 
-        "Import\xa0Notes", "Import\xa0Action", "Import\xa0In Garden"]);
-
-        //check the view type in session storage and adjust the view if needed
-        //full view is not stored, thus for it the following clause is skipped
-        if (sessionStorage.hiddenColumns) {
-          //if there are hidden columns, update the View Button's text;
-          document.getElementById("btnView").innerText = sessionStorage.viewName;
-          let hiddenCols = sessionStorage.hiddenColumns.split(",");
-          //format the column names in the dropdown
-          for (let i = 0, l = arrHeaders.length; i < l; i++) {
-            //if the column is listed in sessionStorage.hiddneColumns, hide that column
-            if (hiddenCols.includes(arrHeaders[i])) {//} .replace(" ","\xa0"))) {
-              customColumnDisplay(i, false);
-            }
-          }
-          $("#btnCustomCols").show();
-        }
-      }
-    } else if (this.status == 404) {
-      //was xhr instead of this
-      console.log("text file (source) not found");
-    }
-  }
-  xhr.open("GET", "plants.json", true);
-  xhr.send("x=" + JSON.stringify({table: "plants"}));
+  fetch('plants.json')
+    .then(function(resp){
+    return resp.json()  
+  }).then(function(json){
+    putDataInTable(json);
+  }).catch(function(err){
+    console.log("Issue fetching data, " + err.message);
+  })
+  
 }
 
 //////////////////////////////////////////////////////////////////////
-//resizing columns
+// add data pulled from plants.json to the table;
+// call other functions to check local storage for user added plants; 
+// check session storage for filtered plants and hidden columns;
+function putDataInTable(json) {
+  let objNotes = null,
+  objAction = null,
+  objInGarden = null;
+  let myObj = json;
 
-var pageX, curCol, curColWidth;
+  //start the text string to contain the body of the html table
+  let txt = "<tbody>";
+  //l = number of columns
+  let l = myObj[Object.keys(myObj)[0]].length;
+  //k = Latin Name, the name of the key column in headers (first) JSON object entry 
+  let k = Object.keys(myObj)[0];
 
-function touchDown() {
-  event.preventDefault();
-  let tgt = event.target;
-  curCol = tgt.parentElement;
-  pageX = event.pageX;
+  //build the HEADERS row
+  //latin name is the key, common name - 1st value index 0, notes - 2nd index 1, etc.
+  txt += "<tr title='Click to Sort'>";
 
-  let padding = paddingDiff(curCol);
-  curColWidth = curCol.offsetWidth - padding;
+  for (let i = 0; i < l; i++) {
+    //record column names in a var, replacing html nonbreaking space with js one
+    arrHeaders.push(myObj[k][i].replaceAll("&nbsp","\xa0"));      
 
-  function paddingDiff(col){
-    if (getStyleVal(col,'box-sizing') == 'border-box'){
-      return 0;
+    //latin name is added separately cuz it's the key and only needs to be added
+    //once, thus it's here, combined with common name
+    if (i === 0) {
+      //replace nbsp for latin name value
+      arrHeaders.push(k.replaceAll("&nbsp","\xa0"));
+
+      //Common Name column header
+      txt += `<th class='frozenCol colWidth2' style='z-index:3;'>${myObj[k][i]}`;
+      //add resizing support to the common name column
+      txt += "<div class='resizable'></div>";
+      txt += "</th>";
+
+      //Latin Name column header
+      txt += `<th class='colWidth2'>${k}`;
     }
-    return (parseInt(getStyleVal(col,'padding-left')) + parseInt(getStyleVal(col,'padding-right')));
+
+    //Notes column header - add unique title, column width is wide
+    else if (i === 1){
+      txt += `<th class='colWidth3' title='This column is editable.'>${myObj[k][i]}`;
+    }
+
+    //Action column header - add unique title, column width is narrow
+    else if (i === 2){
+      txt += `<th class='colWidth1' title='This column is editable.'>${myObj[k][i]}`;
+    }
+
+    //Leaves column header - add unique title, column width is narrow
+    else if (i === 7){
+      txt += `<th class='colWidth1' title='Semi-evergreen keeps its leaves through winter in warmer climates. Annuals reseed every year, while perennials are like decidious and loose their leaves in winter, then come back in spring.'>${myObj[k][i]}`;
+    }
+
+    //Sun column header - add unique title, column width is narrow
+    else if (i === 10){
+      txt += `<th class='colWidth1' title='Full: 6 or more hours of sun a day, part sun or part shade: 3-6 hours a day, shade: less than 3 hours of sun.'>${myObj[k][i]}`;
+    }
+
+    //'In Garden' column header - add unique title, column width is medium
+    else if (i === 12){
+      txt += `<th class='colWidth2' title='This column is editable.'>${myObj[k][i]}`;
+    }
+
+    //Soil column header - add unique title, column width is narrow
+    else if (i === 19){
+      txt += `<th class='colWidth1' title='Soil pH: circumneutral - near neutral, ph 6.8-7.2, acidic - below 6.8, alkaline - above 7.2. Moisture: hydric - abundant, mesic - moderate, xeric - dry.'>${myObj[k][i]}`;
+    }
+
+    //'When To Plant' column header - add unique title, column width is medium
+    else if (i === 21){
+      txt += `<th class='colWidth2' title='In NC, first frost is in early Nov, last frost is in early Mar.'>${myObj[k][i]}`;
+    }
+
+    //'Days To' column header - add unique title, column width is medium
+    else if (i === 22){
+      txt += `<th class='colWidth2' title='Days To... g: germination, h: harvest, m: maturity.'>${myObj[k][i]}`;
+    }
+
+    //narrow column headers, colWidth1
+    else if ([3, 4, 5, 6, 7, 11, 14, 15, 28, 29].includes(i)){
+      txt += `<th class='colWidth1'>${myObj[k][i]}`;
+    }
+    //medium size column headers, colWidth2
+    else if ([8, 9, 17, 18, 24, 26, 27].includes(i)){
+      txt += `<th class='colWidth2'>${myObj[k][i]}`;
+    }
+    //wide column headers, colWidth3
+    else if ([13, 16, 20, 23, 25].includes(i)){
+      txt += `<th class='colWidth3'>${myObj[k][i]}`;
+    }
+    //headers for all other columns, which there shouldn't be any at this point
+    else {
+      txt += `<th>${myObj[k][i]}`;
+    }
+    //add an eye icon to each (except common name, it can be resized instead)
+    txt += "<i title='Hide this column' class='fas fa-eye'></i></th>"
   }
-   
-  function getStyleVal(elm,css){
-     return (window.getComputedStyle(elm, null).getPropertyValue(css));
-   }
-}
+  txt += "</tr>";
 
-function resizeCol() {
-  if (!curCol) return;
-  if (curCol) {
-    let diffX = event.pageX - pageX;
-    if ((curColWidth + diffX) < 75) {
-      diffX = 75 - curColWidth;
+  //build the FILTERS row
+  txt += "<tr>";
+  for (let i = 0; i <= l; i++) {
+    //common name column
+    if (i === 0) {
+      //"filterFreeze" is a filter cell for the common name column only
+      txt += "<td class='filterFreeze'> " + 
+        "<input autocorrect='off' type='text' class='filterInput' placeholder='filter by ...'> " + 
+        "<button class='btnInner btnLeft' title='Filter by " + myObj[k][0].replace("&nbsp"," ") +  "'> " + 
+        "<img class='btnImg' src='pictures/btnLeafDown.png' border=0></button></td>";
     }
-    curCol.style.width = (curColWidth + diffX)+'px';
-  }  
-}
+    //if the last column, picture, don't need the drop down filtering button
+    else if (i === (l)) {
+      txt += "<td class='frozenFilterRow'></td>";
+    }
+    //all other columns
+    else {
+      txt += "<td class='frozenFilterRow'><input type='text' class='filterInput'> ";
+      if (i === 1) {
+        txt += "<button class='btnInner btnLeft' title='Filter by " + k.replace("&nbsp"," ") +  "'>";
+      } 
+      else {
+        txt += "<button class='btnInner btnLeft' title='Filter by " + myObj[k][i-1].replace("&nbsp"," ") +  "'>";
+      }
+      txt += "<img class='btnImg' src='pictures/btnLeafDown.png' 'border=0'></td>";
+    }
+  }
+  txt += "</tr>";
+  //remove the headers from myObj, since the headers are now recorded 
+  //and it's not needed for looping through data rows
+  delete myObj[k];
 
-function touchUp() {
-   curCol = undefined;
-   pageX = undefined;
-   curColWidth = undefined;
-}
+  //build the REST OF THE TABLE
+  //loop through every row object of data returned from JSON as myObj
+  //in the myObj, latin name(x) is the key, common name is ind 0, note is 1, etc.
+  for (let x in myObj) {
+
+    //add data row <tr> and place a <td> with COMMON NAME in it; 
+    txt += "<tr><td class='frozenCol'>" + myObj[x][0] + "</td>"; 
+
+    //if the local storage is available, pull Notes, In Garden, if those exist
+    if (typeof (Storage) !== "undefined") {
+      try {
+        objNotes = JSON.parse(localStorage.aas_myGardenDb_Notes);
+      } 
+      catch (error) {
+        //no Notes in local storage, no problem
+      }
+       try {
+        objAction = JSON.parse(localStorage.aas_myGardenDb_Action); //if stored data is corrupted
+      }
+      catch (error) {
+        //no Action in local storage, no problem
+      }
+      try {
+        objInGarden = JSON.parse(localStorage.aas_myGardenDb_InGarden);
+      }
+      catch (error) {
+        //no In Garden in local storage, no problem
+      }
+    }
+
+    //loop through the array of objects in JSON object - these become table rows
+    for (let i = 0; i < l; i++) {
+      switch (i) {
+        //Latin Name
+        case 0:
+          txt += "<td>" + x + "</td>";
+          break;
+        case 1:
+          //store the length of existing notes in notesLen attribute, 
+          //used to capture just the user added notes in local storage
+          txt += "<td contenteditable=true notesLen='" + myObj[x][i].length + "'>";
+          //objNotes - all Notes in local storage
+          if (objNotes) {
+            //if there is an entry in local storage for the plant
+            if (objNotes[x]) {
+              txt += myObj[x][i] + " " + objNotes[x];
+            } else {
+              txt += myObj[x][i];
+            }
+          } else {
+            txt += myObj[x][i];
+          }
+          break;
+        //Action, only load user's saved
+        case 2:
+          txt += "<td contenteditable=true>";
+          //objAction - all Action in local storage
+          if (objAction) {
+            if (objAction[x]) {
+              txt += objAction[x];
+            } else {
+              txt += myObj[x][i];
+            }
+          }
+          break;
+        //In Garden field, only load user's saved
+        case 12:
+          txt += "<td contenteditable=true>";
+          //objInGarden - all In Garden in local storage
+          if (objInGarden) {
+            if (objInGarden[x]) {
+              txt += objInGarden[x];
+            } else {
+              txt += myObj[x][i];
+            }
+          }
+          txt += "</td>";
+          break;
+        //Photo: if value in source file is not 0 then a photo is present: perform, 
+        //a lazy load, record the value indicating how many photos are available
+        //for the plant, set the source based on the common name with .jpg
+        //extension, set the alternative text using the common name
+        case (l-1):
+          if (myObj[x][i] === "0") {
+            txt += "<td><img src='pictures/btnCog.png' " 
+              + "alt='" + myObj[x][0] + "'"
+              + "></td>";
+          } else {
+            txt += "<td loading='lazy'>"
+              + "<img class='pic' " 
+              + "value = '" + myObj[x][i] + "' "
+            //remove spaces, dashes, quotes, v., (), & from the plants' names
+              + "src='pictures/" + myObj[x][0].replace((/( |-|\(|\)|v\.|&|\"|\')/g),"") + "1.jpg' " 
+              + "alt='" + myObj[x][0] + "' "
+            //saving some good code to handle errors in images
+//                   + "onerror='this.onerror=null; this.src=\"pictures/btnCog.png\"' "
+              +"></td>";
+          }
+          break;
+        //All other columns
+        default:
+          txt += "<td>" + myObj[x][i] + "</td>";
+          break;
+      }
+    }
+    txt += "</tr>";
+  }
+  //add NEW PLANT ROW, used for entering new plants
+  txt += "<tr id='newPlantRow' contenteditable=true>"//blank cell <td> for the latin name
+  //blank cell for common name is special, containing a div/text plus editing buttons
+  txt += "<td class='frozenCol'><div contenteditable=true></div>"
+  txt += "<button id='btnNewPlantCopy' class='btnInner btnLeft' title='Copy an existing plant to modify and add a new entry'>"
+    txt += "<img class='btnImg' src='pictures/btnLeafDown.png'></button>"
+  txt += "<button id='btnNewPlantClear' class='btnInner' title='Clear this row'>"
+    txt += "<img class='btnImg' src='pictures/btnCut.png'></button>"
+//         txt += "<i class='fas fa-cut'></i></button>"
+//       txt += "<button id='btnNewPlantSubmit' class='btnInner' title='Request addition of your plant to the database'>"
+//         txt += "<img class='btnImg' src='pictures/btnShovel.png'></button>"
+  txt += "<button id='btnNewPlantAdd' class='btnInner' title='Add your new plant'>"
+    txt += "<img class='btnImg' src='pictures/btnShovel.png'></button>"
+  txt += "</td>";
+  //remaining blank cells for all columns other than common name (above) and picture (below)
+  for (let i = 1; i < l; i++) {
+    txt += "<td></td>";
+  }
+  //blank cell for the picture cell
+  txt += "<td title='The upload image functionality is not yet available'>image</td></tr>"
+  txt += "</tbody>"
+  txt += "</table>"
+  table.innerHTML += txt;
+
+  //if storage is available, add storage features and retrieve
+  //session variables: filered rows and hidden columns
+  if (typeof (Storage) !== "undefined") {
+
+    addStorageFeatures();
+
+    //if data has been filtered in this session and filters are stored in session storage, 
+    //retrieve them and filter the table rows
+    if (sessionStorage.filters) {
+      filters = JSON.parse(sessionStorage.filters);
+      for (i in filters) {
+        //min/max height and width support
+        if (filters[i][">"]) {
+          table.children[0].children[1].children[i].children[0].value =
+          filters[i][">"] + "-" + filters[i]["<"];
+          filterData();
+        }
+        else {
+          //if more than one filter choice
+          if (Array.isArray(filters[i]) && filters[i].length > 1) {
+            table.children[0].children[1].children[i].children[0].value = "...";
+            } 
+          //else, if one filter choice
+          else {
+            table.children[0].children[1].children[i].children[0].value = filters[i].toString().toLowerCase();
+          }
+          filterData();
+        }
+        addClearingBtn(table.children[0].children[1].children[i]);
+      }
+    }
+
+    //creating the column drop down menu, used in custom view
+    addDropDown("dropColNames", arrHeaders);
+
+    //adding export/import menu sub choices here just to keep it together
+    //the Export/Import are separated from the rest of the choice name by no space 
+    //on purpose, this is used later in code, the rest needs to not be \xa0
+    addDropDown("dropExportImport",
+    ["Export\xa0Notes", "Export\xa0Action", "Export\xa0In Garden", 
+    "Import\xa0Notes", "Import\xa0Action", "Import\xa0In Garden"]);
+
+    //check the view type in session storage and adjust the view if needed
+    //full view is not stored, thus for it the following clause is skipped
+    if (sessionStorage.hiddenColumns) {
+      //if there are hidden columns, update the View Button's text;
+      document.getElementById("btnView").innerText = sessionStorage.viewName;
+      let hiddenCols = sessionStorage.hiddenColumns.split(",");
+      //format the column names in the dropdown
+      for (let i = 0, l = arrHeaders.length; i < l; i++) {
+        //if the column is listed in sessionStorage.hiddneColumns, hide that column
+        if (hiddenCols.includes(arrHeaders[i])) {//} .replace(" ","\xa0"))) {
+          customColumnDisplay(i, false);
+        }
+      }
+      $("#btnCustomCols").show();
+    }
+  }
+} 
 
 //////////////////////////////////////////////////////////////////////
 //click on one of Export/Import choices (in settings (cog, top left), Export/Import menu)
@@ -1293,7 +1251,7 @@ function getUnqVals(forCell) {
               continue; //next filter
             }
             //exclude values that are filtered out for other columns
-            if (!filters[key].includes(tr[i].children[key].textContent.toUpperCase())
+            if (!filters[key].toString().includes(tr[i].children[key].textContent.toUpperCase())
             && !tr[i].children[key].textContent.toUpperCase().includes(filters[key])) {
               continue loopTableRows;
             }
@@ -1969,6 +1927,46 @@ function allClicks(e) {
       }
     }
   }
+  else if (["mousedown", "touchstart"].includes(e.type)) {
+//     e.preventDefault();
+//     e.stopPropagation();
+    curCol = tgt.parentElement;
+    pageX = e.pageX;
+
+    let padding = paddingDiff(curCol);
+    curColWidth = curCol.offsetWidth - padding;
+
+    function paddingDiff(col){
+      if (getStyleVal(col,'box-sizing') == 'border-box'){
+        return 0;
+      }
+      return (parseInt(getStyleVal(col,'padding-left')) + parseInt(getStyleVal(col,'padding-right')));
+    }
+
+    function getStyleVal(elm,css){
+       return (window.getComputedStyle(elm, null).getPropertyValue(css));
+     }
+  }
+  else if (["mousemove", "touchmove"].includes(e.type)) {
+    if (!curCol) return;
+    e.preventDefault();
+//     e.stopPropagation();
+    if (curCol) {
+      let diffX = e.pageX - pageX;
+      if ((curColWidth + diffX) < 75) {
+        diffX = 75 - curColWidth;
+      }
+      curCol.style.width = (curColWidth + diffX)+'px';
+    } 
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+//clear resizing variables on touch/mouse up
+function touchUp() {
+  curCol = undefined;
+  pageX = undefined;
+  curColWidth = undefined;
 }
 
 
